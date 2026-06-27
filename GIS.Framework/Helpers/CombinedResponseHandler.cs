@@ -22,31 +22,57 @@ namespace GIS.Framework.Helpers
                 LoggerHelper.Log("Combined Payload successfully written to TEC_EI_LOG.");
 
                 // 2. Parse the response and update SAP directly
-                if (rawJsonResponse != null && rawJsonResponse.Contains("\"status_cd\":\"1\""))
+                if (rawJsonResponse != null)
                 {
                     try
                     {
                         var jObj = Newtonsoft.Json.Linq.JObject.Parse(rawJsonResponse);
-                        string irn = jObj["Data"]?["Irn"]?.ToString() ?? "";
-                        string ackNo = jObj["Data"]?["AckNo"]?.ToString() ?? "";
-                        string ackDt = jObj["Data"]?["AckDt"]?.ToString() ?? "";
-                        string signedInvoice = jObj["Data"]?["SignedInvoice"]?.ToString() ?? "";
-                        string signedQRCode = jObj["Data"]?["SignedQRCode"]?.ToString() ?? "";
-                        string ewbNo = jObj["Data"]?["EwbNo"]?.ToString() ?? "";
-                        string ewbValidTill = jObj["Data"]?["EwbValidTill"]?.ToString() ?? "";
+                        string status = jObj["Status"]?.ToString() ?? "";
+                        
+                        bool isSuccess = status == "1" || status.ToLower() == "true" || rawJsonResponse.Contains("\"status_cd\":\"1\"");
+                        bool isDuplicate = false;
+                        
+                        string irn = "", ackNo = "", ackDt = "", signedInvoice = "", signedQRCode = "", ewbNo = "", ewbValidTill = "";
 
-                        // Extract Distance from Request payload
-                        string distance = "";
-                        try
+                        // Check for DUPIRN (Duplicate IRN)
+                        if (!isSuccess && jObj["InfoDtls"] != null && jObj["InfoDtls"].HasValues)
                         {
-                            var reqObj = Newtonsoft.Json.Linq.JObject.Parse(rawJsonRequest);
-                            distance = reqObj["EwayBillDetails"]?["Distance"]?.ToString() ?? "";
+                            string infCd = jObj["InfoDtls"][0]["InfCd"]?.ToString() ?? "";
+                            if (infCd == "DUPIRN")
+                            {
+                                isDuplicate = true;
+                                isSuccess = true;
+                                var desc = jObj["InfoDtls"][0]["Desc"];
+                                irn = desc?["Irn"]?.ToString() ?? "";
+                                ackNo = desc?["AckNo"]?.ToString() ?? "";
+                                ackDt = desc?["AckDt"]?.ToString() ?? "";
+                                LoggerHelper.Log("Duplicate IRN detected. Treating as SUCCESS and extracting previous IRN details.");
+                            }
                         }
-                        catch { }
 
-                        if (!string.IsNullOrEmpty(irn))
+                        if (isSuccess && !isDuplicate)
+                        {
+                            irn = jObj["Data"]?["Irn"]?.ToString() ?? "";
+                            ackNo = jObj["Data"]?["AckNo"]?.ToString() ?? "";
+                            ackDt = jObj["Data"]?["AckDt"]?.ToString() ?? "";
+                            signedInvoice = jObj["Data"]?["SignedInvoice"]?.ToString() ?? "";
+                            signedQRCode = jObj["Data"]?["SignedQRCode"]?.ToString() ?? "";
+                            ewbNo = jObj["Data"]?["EwbNo"]?.ToString() ?? "";
+                            ewbValidTill = jObj["Data"]?["EwbValidTill"]?.ToString() ?? "";
+                        }
+
+                        if (isSuccess && !string.IsNullOrEmpty(irn))
                         {
                             string tableName = (objType == "13") ? "OINV" : (objType == "14" ? "ORIN" : "OWTR");
+
+                            // Extract Distance from Request payload
+                            string distance = "";
+                            try
+                            {
+                                var reqObj = Newtonsoft.Json.Linq.JObject.Parse(rawJsonRequest);
+                                distance = reqObj["EwayBillDetails"]?["Distance"]?.ToString() ?? "";
+                            }
+                            catch { }
 
                             // Update SAP Document
                             string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_ACKNo\"='{ackNo}', \"U_ACKDt\"='{ackDt}', \"U_SgnInv\"='{signedInvoice}', \"U_SgnQrC\"='{signedQRCode}', \"U_EwbNo\"='{ewbNo}', \"U_EwbVal\"='{ewbValidTill}'";
@@ -61,35 +87,34 @@ namespace GIS.Framework.Helpers
                             dbHelper.ExecuteNonQuery(insertOres);
                             LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
                         }
+                        else
+                        {
+                            LoggerHelper.Log("API returned an error. Logged to TEC_EI_LOG. Will update Comments with error.");
+                            string tableName = (objType == "13") ? "OINV" : (objType == "14" ? "ORIN" : "OWTR");
+
+                            // Extract a clean error message
+                            string errMsg = "Unknown Error";
+                            try
+                            {
+                                if (jObj["error"] != null && jObj["error"]["message"] != null)
+                                {
+                                    errMsg = jObj["error"]["message"].ToString();
+                                }
+                                else if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                {
+                                    errMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errMsg;
+                                }
+                            }
+                            catch { }
+
+                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\" = '{errMsg.Replace("'", "''")}' WHERE \"DocEntry\" = {docEntry}";
+                            dbHelper.ExecuteNonQuery(updateQuery);
+                        }
                     }
                     catch (Exception parseEx)
                     {
-                        LoggerHelper.Log("Failed to parse IRN from success response: " + parseEx.Message);
+                        LoggerHelper.Log("Failed to parse API response: " + parseEx.Message);
                     }
-                }
-                else
-                {
-                    LoggerHelper.Log("API returned an error. Logged to TEC_EI_LOG. Will update Comments with error.");
-                    string tableName = (objType == "13") ? "OINV" : (objType == "14" ? "ORIN" : "OWTR");
-
-                    // Extract a clean error message
-                    string errMsg = "Unknown Error";
-                    try
-                    {
-                        var errObj = Newtonsoft.Json.Linq.JObject.Parse(rawJsonResponse);
-                        if (errObj["error"] != null && errObj["error"]["message"] != null)
-                        {
-                            errMsg = errObj["error"]["message"].ToString();
-                        }
-                        else if (errObj["ErrorDetails"] != null && errObj["ErrorDetails"].HasValues)
-                        {
-                            errMsg = errObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errMsg;
-                        }
-                    }
-                    catch { }
-
-                    string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\" = '{errMsg.Replace("'", "''")}' WHERE \"DocEntry\" = {docEntry}";
-                    dbHelper.ExecuteNonQuery(updateQuery);
                 }
             }
             catch (Exception ex)
