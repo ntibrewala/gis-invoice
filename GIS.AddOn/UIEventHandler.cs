@@ -18,6 +18,13 @@ namespace GIS.AddOn
             LoggerHelper.Log("UIEventHandler initialized and listening for SAP events.");
         }
 
+        private bool ConfirmAction(string buttonCaption)
+        {
+            string msg = $"Are you sure you want to run the {buttonCaption} generation?";
+            int userResponse = _connectionManager.SboApplication.MessageBox(msg, 1, "Yes", "No", "");
+            return userResponse == 1;
+        }
+
         private void SboApplication_ItemEvent(string FormUID, ref SAPbouiCOM.ItemEvent pVal, out bool BubbleEvent)
         {
             BubbleEvent = true;
@@ -57,6 +64,11 @@ namespace GIS.AddOn
 
                         // Retrieve the internal DocEntry from the Form's DataSource
                         var oForm = _connectionManager.SboApplication.Forms.Item(FormUID);
+                        
+                        // Extract button caption dynamically for the confirmation prompt
+                        var btn = (SAPbouiCOM.Button)oForm.Items.Item(pVal.ItemUID).Specific;
+                        string btnCaption = btn.Caption;
+
                         string objType = (pVal.FormTypeEx == "133") ? "13" : "14";
                         string tableName = (objType == "13") ? "OINV" : "ORIN";
 
@@ -68,6 +80,12 @@ namespace GIS.AddOn
                             return;
                         }
 
+                        // Reusable Confirmation Helper
+                        if (!ConfirmAction(btnCaption))
+                        {
+                            return; // User clicked 'No'
+                        }
+
                         // Execute the Framework
                         var dbHelper = new DatabaseHelper(_connectionManager.Company);
 
@@ -75,7 +93,9 @@ namespace GIS.AddOn
 
                         string apiRes = CombinedEngine.ProcessCombined(dbHelper, objType, docEntry);
 
-                        if (apiRes.Contains("\"status_cd\":\"1\"") && !apiRes.Contains("\"error\""))
+                        bool isSuccess = apiRes.Contains("\"Status\":\"1\"") || apiRes.Contains("\"Status\":1") || apiRes.Contains("\"status_cd\":\"1\"") || apiRes.Contains("DUPIRN");
+
+                        if (isSuccess && !apiRes.Contains("\"error\""))
                         {
                             _connectionManager.SboApplication.StatusBar.SetText("E-Invoice Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                         }
