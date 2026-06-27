@@ -90,16 +90,16 @@ namespace GIS.Framework.Helpers
                             }
                             catch { }
 
-                            // Update SAP Document
-                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_ACKNo\"='{ackNo}', \"U_ACKDt\"='{ackDt}', \"U_SgnInv\"='{signedInvoice}', \"U_SgnQrC\"='{signedQRCode}', \"U_EwbNo\"='{ewbNo}', \"U_EwbVal\"='{ewbValidTill}'";
+                            // Update SAP Document - ONLY use columns that exist on OINV
+                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_cEwbNo\"='{ewbNo}'";
                             if (!string.IsNullOrEmpty(distance)) updateQuery += $", \"U_TotalDist\"='{distance}'";
                             updateQuery += $" WHERE \"DocEntry\"={docEntry}";
 
                             dbHelper.ExecuteNonQuery(updateQuery);
                             LoggerHelper.Log($"Successfully updated U_IRN and details on {tableName} {docEntry}");
 
-                            // Insert into GIS_EI_ORES
-                            string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"DocType\", \"Error_Message\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"SignedInvoice\", \"SignedQRCode\", \"EWBNo\", \"EWBValidTill\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'Success', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}', '{ewbNo}', '{ewbValidTill}')";
+                            // Insert into GIS_EI_ORES using correct ObjType and Encrypted columns
+                            string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\", \"EwbNo\", \"EwbValidTill\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'Success', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}', '{ewbNo}', '{ewbValidTill}')";
                             dbHelper.ExecuteNonQuery(insertOres);
                             LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
                         }
