@@ -64,6 +64,7 @@ namespace GIS.Framework.Helpers
                                 signedQRCode = nestedObj["SignedQRCode"]?.ToString() ?? "";
                                 ewbNo = jObj["EwbNo"]?.ToString() ?? nestedObj["EwbNo"]?.ToString() ?? "";
                                 ewbValidTill = jObj["EwbValidTill"]?.ToString() ?? nestedObj["EwbValidTill"]?.ToString() ?? "";
+                                ewbDt = jObj["EwbDt"]?.ToString() ?? nestedObj["EwbDt"]?.ToString() ?? "";
                             }
                             else if (dataToken != null && dataToken.Type == Newtonsoft.Json.Linq.JTokenType.Object)
                             {
@@ -74,6 +75,7 @@ namespace GIS.Framework.Helpers
                                 signedQRCode = dataToken["SignedQRCode"]?.ToString() ?? "";
                                 ewbNo = dataToken["EwbNo"]?.ToString() ?? "";
                                 ewbValidTill = dataToken["EwbValidTill"]?.ToString() ?? "";
+                                ewbDt = dataToken["EwbDt"]?.ToString() ?? "";
                             }
                         }
 
@@ -81,17 +83,28 @@ namespace GIS.Framework.Helpers
                         {
                             string tableName = (objType == "13") ? "OINV" : (objType == "14" ? "ORIN" : "OWTR");
 
-                            // Extract Distance from Request payload
+                            // Fetch Distance from InfoDtls if present
                             string distance = "";
                             try
                             {
-                                var reqObj = Newtonsoft.Json.Linq.JObject.Parse(rawJsonRequest);
-                                distance = reqObj["EwayBillDetails"]?["Distance"]?.ToString() ?? "";
+                                var infoDtls = jObj["InfoDtls"] as Newtonsoft.Json.Linq.JArray;
+                                if (infoDtls != null)
+                                {
+                                    foreach (var info in infoDtls)
+                                    {
+                                        if (info["InfCd"]?.ToString() == "EWBPPD")
+                                        {
+                                            string desc = info["Desc"]?.ToString() ?? "";
+                                            var match = System.Text.RegularExpressions.Regex.Match(desc, @"\d+");
+                                            if (match.Success) distance = match.Value;
+                                        }
+                                    }
+                                }
                             }
                             catch { }
 
                             // Update SAP Document - ONLY use columns that exist on OINV
-                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_cEwbNo\"='{ewbNo}'";
+                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_ewayBNo\"='{ewbNo}', \"U_EwayVal\"='{ewbValidTill}', \"U_ewayBDa\"='{ewbDt}'";
                             if (!string.IsNullOrEmpty(distance)) updateQuery += $", \"U_TotalDist\"='{distance}'";
                             updateQuery += $" WHERE \"DocEntry\"={docEntry}";
 
