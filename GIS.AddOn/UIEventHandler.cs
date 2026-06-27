@@ -99,7 +99,7 @@ namespace GIS.AddOn
 
                             if (apiRes.Contains("DUPIRN"))
                             {
-                                _connectionManager.SboApplication.StatusBar.SetText("Duplicate IRN Detected! Successfully recovered previous IRN details.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                                _connectionManager.SboApplication.StatusBar.SetText("Duplicate IRN Detected! Successfully recovered previous IRN details.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             }
                             else if (isSuccess && !apiRes.Contains("\"error\""))
                             {
