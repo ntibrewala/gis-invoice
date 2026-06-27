@@ -4,3 +4,4 @@ PayloadTester/
 .DS_Store
 *.slnx
 *.cache
+*:Zone.Identifier
