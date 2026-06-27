@@ -20,9 +20,10 @@ namespace GIS.Framework.Helpers
         {
             if (row.Table.Columns.Contains(colName) && row[colName] != DBNull.Value)
             {
-                return row[colName].ToString().Trim();
+                string val = row[colName].ToString().Trim();
+                return string.IsNullOrEmpty(val) ? null : val;
             }
-            return "";
+            return null;
         }
 
         public static EInvoicePayload MapHeader(DataRow headerRow)
@@ -34,14 +35,14 @@ namespace GIS.Framework.Helpers
                 TransactionDetails = new TransactionDetails
                 {
                     TaxScheme = "GST",
-                    SupplyType = GetString(headerRow, "SupTyp") != "" ? GetString(headerRow, "SupTyp") : "B2B",
-                    ReverseCharge = GetString(headerRow, "RegRev") != "" ? GetString(headerRow, "RegRev") : "N",
-                    ECommerceGstin = string.IsNullOrEmpty(ecm) ? null : ecm,
-                    IgstOnIntra = GetString(headerRow, "IgstOnInt") != "" ? GetString(headerRow, "IgstOnInt") : "N"
+                    SupplyType = GetString(headerRow, "SupTyp") ?? "B2B",
+                    ReverseCharge = GetString(headerRow, "RegRev") ?? "N",
+                    ECommerceGstin = ecm, // ecm is already null if empty
+                    IgstOnIntra = GetString(headerRow, "IgstOnInt") ?? "N"
                 },
                 DocumentDetails = new DocumentDetails
                 {
-                    Type = GetString(headerRow, "Type") != "" ? GetString(headerRow, "Type") : "INV",
+                    Type = GetString(headerRow, "Type") ?? "INV",
                     Number = GetString(headerRow, "DocNum"),
                     Date = GetString(headerRow, "Dt")
                 },
@@ -53,7 +54,7 @@ namespace GIS.Framework.Helpers
                     Address1 = GetString(headerRow, "Seller_Addr1"),
                     Address2 = GetString(headerRow, "Seller_Addr2"),
                     Location = GetString(headerRow, "Seller_Loc"),
-                    Pincode = GetString(headerRow, "Seller_Pin") != "" ? Convert.ToInt32(GetString(headerRow, "Seller_Pin")) : 0,
+                    Pincode = GetString(headerRow, "Seller_Pin") != null ? Convert.ToInt32(GetString(headerRow, "Seller_Pin")) : 0,
                     StateCode_Address = GetString(headerRow, "Seller_State"),
                     Phone = GetString(headerRow, "Seller_Ph"),
                     Email = GetString(headerRow, "Seller_Em")
@@ -67,7 +68,7 @@ namespace GIS.Framework.Helpers
                     Address1 = GetString(headerRow, "Buyer_Addr1"),
                     Address2 = GetString(headerRow, "Buyer_Addr2"),
                     Location = GetString(headerRow, "Buyer_Loc"),
-                    Pincode = GetString(headerRow, "Buyer_Pin") != "" ? Convert.ToInt32(GetString(headerRow, "Buyer_Pin")) : 0,
+                    Pincode = GetString(headerRow, "Buyer_Pin") != null ? Convert.ToInt32(GetString(headerRow, "Buyer_Pin")) : 0,
                     StateCode_Address = GetString(headerRow, "Buyer_State"),
                     Phone = GetString(headerRow, "Buyer_Ph"),
                     Email = GetString(headerRow, "Buyer_Em")
@@ -99,7 +100,7 @@ namespace GIS.Framework.Helpers
                 {
                     SlNo = GetString(row, "LineNum"),
                     ProductDescription = GetString(row, "PrdDesc"),
-                    IsService = GetString(row, "IsServc") != "" ? GetString(row, "IsServc") : "N",
+                    IsService = GetString(row, "IsServc") ?? "N",
                     HsnCode = GetString(row, "HsnCd"),
                     Quantity = GetDecimal(row, "Qty"),
                     Unit = GetString(row, "Unit"),

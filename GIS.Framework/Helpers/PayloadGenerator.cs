@@ -36,16 +36,24 @@ namespace GIS.Framework.Helpers
                     DataRow ewbRow = ewbTable.Rows[0];
                     if (ewbRow.Table.Columns.Contains("transporterId") || ewbRow.Table.Columns.Contains("vehicleNo"))
                     {
+                        string transId = ewbRow.Table.Columns.Contains("transporterId") ? ewbRow["transporterId"].ToString().Trim() : null;
+                        string transName = ewbRow.Table.Columns.Contains("transporterName") ? ewbRow["transporterName"].ToString().Trim() : null;
+                        string transMode = ewbRow.Table.Columns.Contains("transMode") ? ewbRow["transMode"].ToString().Trim() : null;
+                        string transDocNo = ewbRow.Table.Columns.Contains("transDocNo") ? ewbRow["transDocNo"].ToString().Trim() : null;
+                        string transDocDt = ewbRow.Table.Columns.Contains("transDocDate") ? ewbRow["transDocDate"].ToString().Trim() : null;
+                        string vehNo = ewbRow.Table.Columns.Contains("vehicleNo") ? ewbRow["vehicleNo"].ToString().Trim() : null;
+                        string vehType = ewbRow.Table.Columns.Contains("vehicleType") ? ewbRow["vehicleType"].ToString().Trim() : null;
+
                         payload.EwayBillDetails = new EwbDetails
                         {
-                            TransporterId = ewbRow.Table.Columns.Contains("transporterId") ? ewbRow["transporterId"].ToString() : "",
-                            TransporterName = ewbRow.Table.Columns.Contains("transporterName") ? ewbRow["transporterName"].ToString() : "",
-                            TransporterMode = ewbRow.Table.Columns.Contains("transMode") ? ewbRow["transMode"].ToString() : "",
-                            Distance = ewbRow.Table.Columns.Contains("transDistance") ? Convert.ToInt32(ewbRow["transDistance"]) : 0,
-                            TransporterDocNo = ewbRow.Table.Columns.Contains("transDocNo") ? ewbRow["transDocNo"].ToString() : "",
-                            TransporterDocDate = ewbRow.Table.Columns.Contains("transDocDate") ? ewbRow["transDocDate"].ToString() : "",
-                            VehicleNo = ewbRow.Table.Columns.Contains("vehicleNo") ? ewbRow["vehicleNo"].ToString() : "",
-                            VehicleType = ewbRow.Table.Columns.Contains("vehicleType") ? ewbRow["vehicleType"].ToString() : "R"
+                            TransporterId = string.IsNullOrEmpty(transId) ? null : transId,
+                            TransporterName = string.IsNullOrEmpty(transName) ? null : transName,
+                            TransporterMode = string.IsNullOrEmpty(transMode) ? null : transMode,
+                            Distance = ewbRow.Table.Columns.Contains("transDistance") && ewbRow["transDistance"] != DBNull.Value && !string.IsNullOrEmpty(ewbRow["transDistance"].ToString()) ? Convert.ToInt32(ewbRow["transDistance"]) : 0,
+                            TransporterDocNo = string.IsNullOrEmpty(transDocNo) ? null : transDocNo,
+                            TransporterDocDate = string.IsNullOrEmpty(transDocDt) ? null : transDocDt,
+                            VehicleNo = string.IsNullOrEmpty(vehNo) ? null : vehNo,
+                            VehicleType = string.IsNullOrEmpty(vehType) ? "R" : vehType
                         };
                     }
                 }
