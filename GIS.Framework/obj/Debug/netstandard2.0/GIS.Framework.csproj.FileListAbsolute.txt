@@ -18,3 +18,4 @@ N:/GIS/1.2/GIS.Framework/obj/Debug/netstandard2.0/GIS.Framework.pdb
 N:/GIS/1.2/GIS.Framework/bin/Debug/netstandard2.0/GIS.Framework.deps.json
 N:/GIS/1.2/GIS.Framework/bin/Debug/netstandard2.0/GIS.Framework.dll
 N:/GIS/1.2/GIS.Framework/bin/Debug/netstandard2.0/GIS.Framework.pdb
+/Users/nikhiltibrewala/GIS.Framework/GIS.Framework/obj/Debug/netstandard2.0/GIS.Framework.sourcelink.json

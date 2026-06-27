@@ -2,6 +2,7 @@ using System;
 using GIS.Framework;
 using GIS.Framework.Helpers;
 using GIS.AddOn.Helpers;
+using Newtonsoft.Json.Linq;
 
 namespace GIS.AddOn
 {
@@ -58,7 +59,6 @@ namespace GIS.AddOn
                         // Determine the Action Type based on the combobox and selected value
                         string actionName = "";
                         if (pVal.ItemUID == "btnComb" && selectedValue == "Generate") actionName = "Generate Combined";
-                        if (pVal.ItemUID == "btnComb" && selectedValue == "Cancel") actionName = "Cancel Combined";
                         
                         if (pVal.ItemUID == "btnEWay" && selectedValue == "Generate") actionName = "Generate E-Way Bill";
                         if (pVal.ItemUID == "btnEWay" && selectedValue == "Cancel") actionName = "Cancel E-Way Bill";
@@ -95,19 +95,134 @@ namespace GIS.AddOn
                             _connectionManager.SboApplication.StatusBar.SetText("Generating E-Invoice, please wait...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                             
                             string apiRes = CombinedEngine.ProcessCombined(dbHelper, objType, docEntry);
-                            bool isSuccess = apiRes.Contains("\"Status\":\"1\"") || apiRes.Contains("\"Status\":1") || apiRes.Contains("\"status_cd\":\"1\"") || apiRes.Contains("DUPIRN");
 
-                            if (apiRes.Contains("DUPIRN"))
+                            // Parse the API Response to extract exact errors
+                            try
                             {
-                                _connectionManager.SboApplication.StatusBar.SetText("Duplicate IRN Detected! Successfully recovered previous IRN details.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                                JObject jObj = JObject.Parse(apiRes);
+                                string status = jObj["Status"]?.ToString() ?? "";
+                                
+                                if (status == "0" || status.ToLower() == "false")
+                                {
+                                    // Total Failure
+                                    string errorMsg = "Combined Failed.";
+                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                    {
+                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    }
+                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else if (status == "1" || status.ToLower() == "true")
+                                {
+                                    // Success for IRN, check if E-Way Bill threw a warning
+                                    bool hasEwbError = false;
+                                    string ewbErrorMsg = "";
+
+                                    if (jObj["InfoDtls"] != null && jObj["InfoDtls"].HasValues)
+                                    {
+                                        string infCd = jObj["InfoDtls"][0]["InfCd"]?.ToString() ?? "";
+                                        if (infCd == "DUPIRN")
+                                        {
+                                            _connectionManager.SboApplication.StatusBar.SetText("Duplicate IRN Detected! Successfully recovered previous IRN details.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                                            return;
+                                        }
+                                        else if (infCd == "EWBERR")
+                                        {
+                                            hasEwbError = true;
+                                            var descArray = jObj["InfoDtls"][0]["Desc"] as JArray;
+                                            if (descArray != null && descArray.Count > 0)
+                                            {
+                                                ewbErrorMsg = descArray[0]["ErrorMessage"]?.ToString() ?? "E-Way Bill Generation Failed.";
+                                            }
+                                            else
+                                            {
+                                                ewbErrorMsg = jObj["InfoDtls"][0]["Desc"]?.ToString() ?? "E-Way Bill Generation Failed.";
+                                            }
+                                        }
+                                    }
+
+                                    if (hasEwbError)
+                                    {
+                                        _connectionManager.SboApplication.MessageBox($"E-Invoice generated successfully, BUT E-Way Bill failed:\n\n{ewbErrorMsg}");
+                                    }
+                                    else
+                                    {
+                                        _connectionManager.SboApplication.StatusBar.SetText("Combined Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                    }
+                                }
                             }
-                            else if (isSuccess && !apiRes.Contains("\"error\""))
+                            catch (Exception parseEx)
                             {
-                                _connectionManager.SboApplication.StatusBar.SetText("Combined Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                LoggerHelper.Log($"Failed to parse API Response in UI: {parseEx.Message}");
+                                _connectionManager.SboApplication.StatusBar.SetText("Combined Generation Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                             }
-                            else
+                        }
+                        else if (actionName == "Generate E-Invoice")
+                        {
+                            LoggerHelper.Log($"GIS ButtonCombo Selected! Initializing Standalone E-Invoice Generation for DocEntry: {docEntry}...");
+                            var dbHelper = new DatabaseHelper(_connectionManager.Company);
+                            _connectionManager.SboApplication.StatusBar.SetText("Generating Standalone E-Invoice, please wait...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            
+                            string apiRes = EInvoiceEngine.ProcessEInvoice(dbHelper, objType, docEntry);
+
+                            // Parse the API Response to extract exact errors
+                            try
                             {
-                                _connectionManager.SboApplication.StatusBar.SetText("Combined Failed. Check Comments on Document.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                                JObject jObj = JObject.Parse(apiRes);
+                                string status = jObj["Status"]?.ToString() ?? "";
+                                
+                                if (status == "0" || status.ToLower() == "false")
+                                {
+                                    // Total Failure
+                                    string errorMsg = "Standalone E-Invoice Failed.";
+                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                    {
+                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    }
+                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else if (status == "1" || status.ToLower() == "true")
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("Standalone E-Invoice Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
+                            }
+                            catch (Exception parseEx)
+                            {
+                                LoggerHelper.Log($"Failed to parse API Response in UI: {parseEx.Message}");
+                                _connectionManager.SboApplication.StatusBar.SetText("Standalone E-Invoice Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            }
+                        }
+                        else if (actionName == "Cancel E-Invoice")
+                        {
+                            LoggerHelper.Log($"GIS ButtonCombo Selected! Initializing Cancel E-Invoice for DocEntry: {docEntry}...");
+                            var dbHelper = new DatabaseHelper(_connectionManager.Company);
+                            _connectionManager.SboApplication.StatusBar.SetText("Cancelling E-Invoice, please wait...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+
+                            string apiRes = CancelEngine.ProcessCancel(dbHelper, objType, docEntry);
+
+                            try
+                            {
+                                JObject jObj = JObject.Parse(apiRes);
+                                string status = jObj["Status"]?.ToString() ?? "";
+
+                                if (status == "0" || status.ToLower() == "false")
+                                {
+                                    string errorMsg = "Cancellation Failed.";
+                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                    {
+                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    }
+                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("E-Invoice Cancelled Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
+                            }
+                            catch (Exception parseEx)
+                            {
+                                LoggerHelper.Log($"Failed to parse Cancel Response in UI: {parseEx.Message}");
+                                _connectionManager.SboApplication.StatusBar.SetText("Cancellation Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                             }
                         }
                         else

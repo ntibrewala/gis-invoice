@@ -1,0 +1,86 @@
+using System;
+using GIS.Framework.Helpers;
+using GIS.Framework.Interfaces;
+using GIS.Framework.Models.EInvoice;
+using Newtonsoft.Json;
+
+namespace GIS.Framework
+{
+    public class CancelEngine
+    {
+        public static string ProcessCancel(IDatabaseHelper dbHelper, string objType, string docEntry)
+        {
+            try
+            {
+                LoggerHelper.Log($"--- STARTING CANCEL PROCESS FOR DOC: {docEntry} ---");
+
+                // Step 1: Check if the document was previously generated and get its IRN
+                string irn = string.Empty;
+                string query = $"SELECT \"Irn\", \"IsCancel\" FROM \"GIS_EI_ORES\" WHERE \"ObjType\" = '{objType}' AND \"DocEntry\" = {docEntry}";
+                var dt = dbHelper.ExecuteQuery(query);
+                
+                if (dt == null || dt.Rows.Count == 0)
+                {
+                    throw new Exception("Document has not been generated on the portal. No IRN found to cancel.");
+                }
+
+                string isCancel = dt.Rows[0]["IsCancel"]?.ToString() ?? "";
+                if (isCancel.ToUpper() == "Y")
+                {
+                    throw new Exception("This Document is already cancelled. Cannot cancel again.");
+                }
+
+                irn = dt.Rows[0]["Irn"]?.ToString() ?? "";
+                if (string.IsNullOrEmpty(irn))
+                {
+                    throw new Exception("IRN is empty in the database. Cannot cancel.");
+                }
+
+                // Step 2: Fetch Credentials and Token
+                LoggerHelper.Log("Fetching API Credentials...");
+                var credentials = CredentialManager.GetCredentialsForDocument(dbHelper, objType, docEntry);
+                if (credentials == null) throw new Exception("Could not resolve credentials for this document.");
+                
+                var tokenResponse = AuthHelper.GetCharteredAuthTokenSync(dbHelper, objType, docEntry);
+                if (tokenResponse.Data == null || string.IsNullOrEmpty(tokenResponse.Data.AuthToken)) throw new Exception("Failed to acquire valid AuthToken. Process aborted.");
+
+                // Target URL
+                string targetUrl = "https://gstsandbox.charteredinfo.com/eicore/dec/v1.03/Invoice/Cancel";
+                // If it were production, we would map it accordingly, but hardcoding sandbox for now based on your python test.
+
+                // Step 3: Create Cancel Payload
+                var cancelPayload = new ReqPlCancelIRN
+                {
+                    Irn = irn,
+                    CnlRsn = "1",
+                    CnlRem = "Cancelled via SAP"
+                };
+                string jsonPayload = JsonConvert.SerializeObject(cancelPayload);
+
+                // Step 4: Run the API
+                LoggerHelper.Log("Executing Cancel API POST...");
+                string apiResponse = ApiRunner.PostCancelInvoice(
+                    jsonPayload,
+                    tokenResponse.Data.AuthToken,
+                    credentials.GSTIN,
+                    credentials.UserName,
+                    credentials.AspPassword,
+                    credentials.AspId,
+                    targetUrl
+                );
+
+                // Step 5: Write the response to SAP (GIS_EI_ORES and OINV)
+                LoggerHelper.Log("Executing Database Write-Back for Cancellation...");
+                CancelResponseHandler.RouteCancelResponse(dbHelper, objType, docEntry, jsonPayload, apiResponse);
+
+                LoggerHelper.Log($"--- COMPLETED CANCEL PROCESS FOR DOC: {docEntry} ---");
+                return apiResponse;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Log($"CRITICAL CANCEL ENGINE FAILURE: {ex.Message}");
+                throw;
+            }
+        }
+    }
+}
