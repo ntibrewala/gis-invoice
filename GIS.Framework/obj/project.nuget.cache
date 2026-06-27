@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "7VNQgEzaN6M=",
+  "success": true,
+  "projectFilePath": "/Users/nikhiltibrewala/GIS.Framework/GIS.Framework/GIS.Framework.csproj",
+  "expectedPackageFiles": [
+    "/Users/nikhiltibrewala/.nuget/packages/microsoft.netcore.platforms/1.1.0/microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "/Users/nikhiltibrewala/.nuget/packages/netstandard.library/2.0.3/netstandard.library.2.0.3.nupkg.sha512",
+    "/Users/nikhiltibrewala/.nuget/packages/newtonsoft.json/13.0.4/newtonsoft.json.13.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "Qgy79aLjLP4=",
+  "success": true,
+  "projectFilePath": "/Users/nikhiltibrewala/GIS.Framework/GIS.AddOn/GIS.AddOn.csproj",
+  "expectedPackageFiles": [
+    "/Users/nikhiltibrewala/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.3/microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "/Users/nikhiltibrewala/.nuget/packages/microsoft.netframework.referenceassemblies.net472/1.0.3/microsoft.netframework.referenceassemblies.net472.1.0.3.nupkg.sha512",
+    "/Users/nikhiltibrewala/.nuget/packages/newtonsoft.json/13.0.4/newtonsoft.json.13.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}

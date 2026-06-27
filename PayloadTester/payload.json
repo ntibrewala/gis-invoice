@@ -1,0 +1,78 @@
+{
+  "Version": "1.1",
+  "TranDtls": {
+    "TaxSch": "GST",
+    "SupTyp": "B2B",
+    "RegRev": "N",
+    "IgstOnInt": "N"
+  },
+  "DocDtls": {
+    "Typ": "INV",
+    "No": "GUJ-26/178",
+    "Dt": "26/06/2026"
+  },
+  "SellerDtls": {
+    "Gstin": "34AACCC1596Q002",
+    "LglNm": "TEST_BHAVYA_TEST8",
+    "TrdNm": "TEST_BHAVYA_TEST8",
+    "Pos": null,
+    "Addr1": "At - Aslali, Ta- Dascroi,",
+    "Addr2": "Godown No.14",
+    "Loc": "Ahmedabad",
+    "Pin": 605001,
+    "Stcd": "34",
+    "Ph": "9000310598",
+    "Em": "info@bhavyapolyfilms.in"
+  },
+  "BuyerDtls": {
+    "Gstin": "37ABEFA9072D1ZH",
+    "LglNm": "AMARAVATHI POLY PACK",
+    "TrdNm": "AMARAVATHI POLY PACK",
+    "Pos": "37",
+    "Addr1": "25-38",
+    "Addr2": "4TH CROSS KABELA ROAD",
+    "Loc": "VIJAYWADA",
+    "Pin": 520012,
+    "Stcd": "37",
+    "Ph": "9491545178",
+    "Em": "test1@gmail.com"
+  },
+  "ItemList": [
+    {
+      "SlNo": "0",
+      "PrdDesc": "PBAT (COMPOSTABLE POLYESTERS) KB100NC901",
+      "IsServc": "N",
+      "HsnCd": "39079900",
+      "Qty": 1.00,
+      "Unit": "NOS",
+      "UnitPrice": 122.0,
+      "TotAmt": 122.00,
+      "Discount": 0.0,
+      "AssAmt": 122.00,
+      "GstRt": 18.00,
+      "IgstAmt": 21.96,
+      "CgstAmt": 0.00,
+      "SgstAmt": 0.00,
+      "CesRt": 0.00,
+      "CesAmt": 0.00,
+      "CesNonAdvlAmt": 0.00,
+      "StateCesRt": 0.00,
+      "StateCesAmt": 0.00,
+      "StateCesNonAdvlAmt": 0.00,
+      "OthChrg": 0.00,
+      "TotItemVal": 143.96
+    }
+  ],
+  "ValDtls": {
+    "AssVal": 122.00,
+    "CgstVal": 0.00,
+    "SgstVal": 0.00,
+    "IgstVal": 21.96,
+    "CesVal": 0.00,
+    "StCesVal": 0.00,
+    "Discount": 0.00,
+    "OthChrg": 0.0,
+    "RndOffAmt": 0.04,
+    "TotInvVal": 144.00
+  }
+}

@@ -1,0 +1,17 @@
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.GeneratedMSBuildEditorConfig.editorconfig
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.AssemblyInfoInputs.cache
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.AssemblyInfo.cs
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.csproj.CoreCompileInputs.cache
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/bin/Debug/net10.0/PayloadTester
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/bin/Debug/net10.0/PayloadTester.deps.json
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/bin/Debug/net10.0/PayloadTester.runtimeconfig.json
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/bin/Debug/net10.0/PayloadTester.dll
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/bin/Debug/net10.0/PayloadTester.pdb
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/bin/Debug/net10.0/Newtonsoft.Json.dll
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.csproj.AssemblyReference.cache
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadT.A950F9C1.Up2Date
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.dll
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/refint/PayloadTester.dll
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.pdb
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/PayloadTester.genruntimeconfig.cache
+/Users/nikhiltibrewala/GIS.Framework/PayloadTester/obj/Debug/net10.0/ref/PayloadTester.dll
