@@ -113,6 +113,9 @@ namespace GIS.Framework.Helpers
                             LoggerHelper.Log($"Successfully updated U_IRN and details on {tableName} {docEntry}");
 
                             // Insert into GIS_EI_ORES using correct ObjType and Encrypted columns (Omitting EwbNo to prevent integer overflow since OINV already captures it)
+                            string deleteOres = $"DELETE FROM \"GIS_EI_ORES\" WHERE \"DocEntry\"={docEntry} AND \"ObjType\"='{sDocType}'";
+                            dbHelper.ExecuteNonQuery(deleteOres);
+
                             string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\", \"IsCancel\", \"ResponseCode\", \"RandomNo\", \"QRCodeImage\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'ACT', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}', '', '1', '', '')";
                             dbHelper.ExecuteNonQuery(insertOres);
                             LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
