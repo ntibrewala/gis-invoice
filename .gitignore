@@ -1,0 +1,6 @@
+bin/
+obj/
+PayloadTester/
+.DS_Store
+*.slnx
+*.cache
