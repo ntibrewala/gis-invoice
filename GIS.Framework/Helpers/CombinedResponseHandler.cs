@@ -112,13 +112,21 @@ namespace GIS.Framework.Helpers
                             dbHelper.ExecuteNonQuery(updateQuery);
                             LoggerHelper.Log($"Successfully updated U_IRN and details on {tableName} {docEntry}");
 
-                            // Insert into GIS_EI_ORES using correct ObjType and Encrypted columns (Omitting EwbNo to prevent integer overflow since OINV already captures it)
-                            string deleteOres = $"DELETE FROM \"GIS_EI_ORES\" WHERE \"DocEntry\"={docEntry} AND \"ObjType\"='{sDocType}'";
-                            dbHelper.ExecuteNonQuery(deleteOres);
-
-                            string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\", \"IsCancel\", \"ResponseCode\", \"RandomNo\", \"QRCodeImage\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'ACT', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}', '', '1', '', '')";
-                            dbHelper.ExecuteNonQuery(insertOres);
-                            LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
+                            // Upsert GIS_EI_ORES (to prevent Error 305 duplicate rows without deleting)
+                            string checkExist = $"SELECT 1 FROM \"GIS_EI_ORES\" WHERE \"DocEntry\"={docEntry} AND \"ObjType\"='{sDocType}'";
+                            var dt = dbHelper.ExecuteQuery(checkExist);
+                            if (dt != null && dt.Rows.Count > 0)
+                            {
+                                string updateOres = $"UPDATE \"GIS_EI_ORES\" SET \"ResponseMessage\"='SUCCESS', \"Status\"='ACT', \"AckNo\"='{ackNo}', \"AckDt\"='{ackDt}', \"Irn\"='{irn}', \"EncryptedSignedInvoice\"='{signedInvoice}', \"EncryptedSignedQRCode\"='{signedQRCode}', \"IsCancel\"='', \"ResponseCode\"='1', \"RandomNo\"='', \"QRCodeImage\"='' WHERE \"DocEntry\"={docEntry} AND \"ObjType\"='{sDocType}'";
+                                dbHelper.ExecuteNonQuery(updateOres);
+                                LoggerHelper.Log($"Successfully updated existing record in GIS_EI_ORES for DocEntry {docEntry}.");
+                            }
+                            else
+                            {
+                                string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\", \"IsCancel\", \"ResponseCode\", \"RandomNo\", \"QRCodeImage\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'ACT', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}', '', '1', '', '')";
+                                dbHelper.ExecuteNonQuery(insertOres);
+                                LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
+                            }
 
                             // Call SAP DI API to automatically generate and bind the native QR code
                             if (!string.IsNullOrEmpty(signedQRCode))
@@ -129,26 +137,9 @@ namespace GIS.Framework.Helpers
                         }
                         else
                         {
-                            LoggerHelper.Log("API returned an error. Logged to TEC_EI_LOG. Will update Comments with error.");
-                            string tableName = (objType == "13") ? "OINV" : (objType == "14" ? "ORIN" : "OWTR");
-
-                            // Extract a clean error message
-                            string errMsg = "Unknown Error";
-                            try
-                            {
-                                if (jObj["error"] != null && jObj["error"]["message"] != null)
-                                {
-                                    errMsg = jObj["error"]["message"].ToString();
-                                }
-                                else if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
-                                {
-                                    errMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errMsg;
-                                }
-                            }
-                            catch { }
-
-                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\" = '{errMsg.Replace("'", "''")}' WHERE \"DocEntry\" = {docEntry}";
-                            dbHelper.ExecuteNonQuery(updateQuery);
+                            LoggerHelper.Log("API returned an error. Logged to TEC_EI_LOG. Will NOT update OINV or GIS_EI_ORES to preserve historical successes.");
+                            
+                            // Check if Duplicate IRN logic could go here, but omitted to prevent overwriting.
                         }
                     }
                     catch (Exception parseEx)
