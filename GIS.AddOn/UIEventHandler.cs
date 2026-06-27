@@ -97,10 +97,18 @@ namespace GIS.AddOn
                             string apiRes = CombinedEngine.ProcessCombined(dbHelper, objType, docEntry);
                             bool isSuccess = apiRes.Contains("\"Status\":\"1\"") || apiRes.Contains("\"Status\":1") || apiRes.Contains("\"status_cd\":\"1\"") || apiRes.Contains("DUPIRN");
 
-                            if (isSuccess && !apiRes.Contains("\"error\""))
+                            if (apiRes.Contains("DUPIRN"))
+                            {
+                                _connectionManager.SboApplication.StatusBar.SetText("Duplicate IRN Detected! Successfully recovered previous IRN details.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            }
+                            else if (isSuccess && !apiRes.Contains("\"error\""))
+                            {
                                 _connectionManager.SboApplication.StatusBar.SetText("Combined Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                            }
                             else
+                            {
                                 _connectionManager.SboApplication.StatusBar.SetText("Combined Failed. Check Comments on Document.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            }
                         }
                         else
                         {
