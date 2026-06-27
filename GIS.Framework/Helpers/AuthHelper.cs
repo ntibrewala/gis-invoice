@@ -20,7 +20,21 @@ namespace GIS.Framework.Helpers
             // 1. Fetch Credentials & Check Cache
             var credentials = CredentialManager.GetCredentialsForDocument(dbHelper, objType, docEntry);
             
-            if (!string.IsNullOrEmpty(credentials.ExistingAuthToken))
+            // Check if token exists and is valid for at least the next 5 minutes (buffer)
+            bool isTokenValid = false;
+            if (!string.IsNullOrEmpty(credentials.ExistingAuthToken) && credentials.ExistingTokenExpiry.HasValue)
+            {
+                if (credentials.ExistingTokenExpiry.Value > DateTime.Now.AddMinutes(5))
+                {
+                    isTokenValid = true;
+                }
+                else
+                {
+                    LoggerHelper.Log($"Token exists but expires soon ({credentials.ExistingTokenExpiry.Value}). Fetching new token...");
+                }
+            }
+
+            if (isTokenValid)
             {
                 LoggerHelper.Log($"Found valid, unexpired AuthToken in database cache for GSTIN {credentials.GSTIN}. Skipping HTTP API call.");
                 return new TokenResponse 
