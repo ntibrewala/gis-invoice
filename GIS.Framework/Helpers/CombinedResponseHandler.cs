@@ -104,7 +104,7 @@ namespace GIS.Framework.Helpers
                             catch { }
 
                             // Update SAP Document - ONLY use columns that exist on OINV
-                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_ewayBNo\"='{ewbNo}', \"U_EwayVal\"='{ewbValidTill}', \"U_ewayBDa\"='{ewbDt}'";
+                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_ACKNo\"='{ackNo}', \"U_ACKDt\"='{ackDt}', \"U_SgnInv\"='{signedInvoice}', \"U_SgnQrC\"='{signedQRCode}', \"U_ewayBNo\"='{ewbNo}', \"U_EwayVal\"='{ewbValidTill}', \"U_ewayBDa\"='{ewbDt}'";
                             if (!string.IsNullOrEmpty(distance)) updateQuery += $", \"U_TotalDist\"='{distance}'";
                             updateQuery += $" WHERE \"DocEntry\"={docEntry}";
 
