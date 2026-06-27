@@ -30,8 +30,8 @@ namespace GIS.AddOn
             BubbleEvent = true;
             try
             {
-                // LISTEN FOR COMBOBOX SELECTION ON THE UDF FORM (-133 or -179)
-                if ((pVal.FormTypeEx == "-133" || pVal.FormTypeEx == "-179") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_COMBO_SELECT && !pVal.BeforeAction)
+                // LISTEN FOR COMBOBOX SELECTION ON EITHER THE UDF FORM (-133 or -179) OR MAIN FORM (133 or 179)
+                if ((pVal.FormTypeEx == "-133" || pVal.FormTypeEx == "-179" || pVal.FormTypeEx == "133" || pVal.FormTypeEx == "179") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_COMBO_SELECT && !pVal.BeforeAction)
                 {
                     if (pVal.ItemUID == "U_btnComb" || pVal.ItemUID == "U_btnEWay" || pVal.ItemUID == "U_btnEInv")
                     {
@@ -69,7 +69,7 @@ namespace GIS.AddOn
                         }
 
                         // Retrieve the internal DocEntry
-                        string objType = (pVal.FormTypeEx == "-133") ? "13" : "14";
+                        string objType = (pVal.FormTypeEx == "-133" || pVal.FormTypeEx == "133") ? "13" : "14";
                         string tableName = (objType == "13") ? "OINV" : "ORIN";
                         string docEntry = oUDFForm.DataSources.DBDataSources.Item(tableName).GetValue("DocEntry", 0).Trim();
 
