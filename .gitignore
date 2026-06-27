@@ -5,3 +5,6 @@ PayloadTester/
 *.slnx
 *.cache
 *:Zone.Identifier
+
+# Ignore Python Test Scripts
+PythonScripts/
