@@ -111,8 +111,8 @@ namespace GIS.Framework.Helpers
                             dbHelper.ExecuteNonQuery(updateQuery);
                             LoggerHelper.Log($"Successfully updated U_IRN and details on {tableName} {docEntry}");
 
-                            // Insert into GIS_EI_ORES using correct ObjType and Encrypted columns
-                            string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\", \"EwbNo\", \"EwbValidTill\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'Success', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}', '{ewbNo}', '{ewbValidTill}')";
+                            // Insert into GIS_EI_ORES using correct ObjType and Encrypted columns (Omitting EwbNo to prevent integer overflow since OINV already captures it)
+                            string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'Success', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}')";
                             dbHelper.ExecuteNonQuery(insertOres);
                             LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
                         }
