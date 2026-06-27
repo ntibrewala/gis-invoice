@@ -95,6 +95,23 @@ namespace GIS.Framework.Helpers
                             if (!string.IsNullOrEmpty(distance)) updateQuery += $", \"U_TotalDist\"='{distance}'";
                             updateQuery += $" WHERE \"DocEntry\"={docEntry}";
 
+                            try
+                            {
+                                var dtOinv = dbHelper.ExecuteQuery($"SELECT COLUMN_NAME FROM SYS.COLUMNS WHERE TABLE_NAME = '{tableName}' AND (COLUMN_NAME LIKE '%ACK%' OR COLUMN_NAME LIKE '%IRN%' OR COLUMN_NAME LIKE '%Ack%' OR COLUMN_NAME LIKE '%Irn%')");
+                                string cols = "";
+                                foreach(System.Data.DataRow row in dtOinv.Rows) cols += row["COLUMN_NAME"].ToString() + ", ";
+                                LoggerHelper.Log($"FOUND {tableName} COLUMNS: " + cols);
+                                
+                                var dtOres = dbHelper.ExecuteQuery("SELECT TABLE_NAME, COLUMN_NAME FROM SYS.COLUMNS WHERE TABLE_NAME LIKE '%GIS_EI_ORES%'");
+                                string oresCols = "";
+                                foreach(System.Data.DataRow row in dtOres.Rows) oresCols += row["TABLE_NAME"].ToString() + "." + row["COLUMN_NAME"].ToString() + ", ";
+                                LoggerHelper.Log("FOUND GIS_EI_ORES COLUMNS: " + oresCols);
+                            }
+                            catch(Exception e)
+                            {
+                                LoggerHelper.Log("Could not query schema: " + e.Message);
+                            }
+
                             dbHelper.ExecuteNonQuery(updateQuery);
                             LoggerHelper.Log($"Successfully updated U_IRN and details on {tableName} {docEntry}");
 
