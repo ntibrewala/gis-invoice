@@ -17,5 +17,10 @@ namespace GIS.Framework.Interfaces
         /// Executes an action query (INSERT/UPDATE/DELETE) that doesn't return data.
         /// </summary>
         void ExecuteNonQuery(string query);
+
+        /// <summary>
+        /// Updates the SAP Business One Document's native QR Code generator property using DI API.
+        /// </summary>
+        void UpdateDocumentQRCode(string objType, string docEntry, string encryptedQRCode);
     }
 }

@@ -1,4 +1,4 @@
-﻿using GIS.Framework.Interfaces;
+using GIS.Framework.Interfaces;
 using GIS.Framework.Helpers;
 using System;
 using System.Data;
@@ -74,6 +74,46 @@ namespace GIS.AddOn
                 {
                     Marshal.ReleaseComObject(recordset);
                 }
+            }
+        }
+
+        public void UpdateDocumentQRCode(string objType, string docEntry, string encryptedQRCode)
+        {
+            try
+            {
+                SAPbobsCOM.Documents odocument = null;
+                if (objType == "19")
+                {
+                    odocument = (SAPbobsCOM.Documents)_company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oPurchaseCreditNotes);
+                }
+                else if (objType == "14")
+                {
+                    odocument = (SAPbobsCOM.Documents)_company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oCreditNotes);
+                }
+                else if (objType == "13")
+                {
+                    odocument = (SAPbobsCOM.Documents)_company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oInvoices);
+                }
+
+                if (odocument != null && odocument.GetByKey(Convert.ToInt32(docEntry)))
+                {
+                    // SAP native QR code generation
+                    odocument.CreateQRCodeFrom = encryptedQRCode;
+                    int result = odocument.Update();
+                    
+                    if (result != 0)
+                    {
+                        LoggerHelper.Log($"Failed to update SAP QR Code. Error: {_company.GetLastErrorDescription()}");
+                    }
+                    else
+                    {
+                        LoggerHelper.Log("Successfully bound QR Code to SAP Document via DI API.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Log("DI API QR Code Error: " + ex.Message);
             }
         }
     }

@@ -115,6 +115,13 @@ namespace GIS.Framework.Helpers
                             string insertOres = $"INSERT INTO \"GIS_EI_ORES\" (\"DocEntry\", \"ObjType\", \"ResponseMessage\", \"Status\", \"AckNo\", \"AckDt\", \"Irn\", \"EncryptedSignedInvoice\", \"EncryptedSignedQRCode\") VALUES ('{docEntry}', '{sDocType}', 'SUCCESS', 'Success', '{ackNo}', '{ackDt}', '{irn}', '{signedInvoice}', '{signedQRCode}')";
                             dbHelper.ExecuteNonQuery(insertOres);
                             LoggerHelper.Log($"Successfully inserted record into GIS_EI_ORES for DocEntry {docEntry}.");
+
+                            // Call SAP DI API to automatically generate and bind the native QR code
+                            if (!string.IsNullOrEmpty(signedQRCode))
+                            {
+                                LoggerHelper.Log("Binding native SAP QR Code via DI API...");
+                                dbHelper.UpdateDocumentQRCode(objType, docEntry, signedQRCode);
+                            }
                         }
                         else
                         {
