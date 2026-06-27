@@ -8,13 +8,14 @@ namespace GIS.Framework.Helpers
         public void Handle(IDatabaseHelper dbHelper, string objType, string docEntry, string rawJsonRequest, string rawJsonResponse)
         {
             LoggerHelper.Log("Executing CombinedResponseHandler logic...");
+            LoggerHelper.Log("Executing CombinedResponseHandler logic...");
 
             try
             {
                 string safeRequest = rawJsonRequest?.Replace("'", "''") ?? "";
                 string safeResponse = rawJsonResponse?.Replace("'", "''") ?? "";
                 string sDocTypeLog = (objType == "13") ? "IN" : (objType == "14" ? "CM" : objType);
-                string sDocType = (objType == "13") ? "Invoice" : (objType == "14" ? "CreditMemo" : "Transfer");
+                string sDocType = (objType == "13") ? "13" : (objType == "14" ? "14" : "Unknown");
 
                 // 1. Insert into TEC_EI_LOG (Legacy Logging)
                 string logQuery = $"INSERT INTO \"TEC_EI_LOG\" VALUES('{docEntry}', '{sDocTypeLog}', '{safeRequest}', '{safeResponse}', CURRENT_TIMESTAMP, 'Addon')";
