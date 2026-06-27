@@ -32,7 +32,7 @@ namespace GIS.Framework.Helpers
                         bool isSuccess = status == "1" || status.ToLower() == "true" || rawJsonResponse.Contains("\"status_cd\":\"1\"");
                         bool isDuplicate = false;
                         
-                        string irn = "", ackNo = "", ackDt = "", signedInvoice = "", signedQRCode = "", ewbNo = "", ewbValidTill = "";
+                        string irn = "", ackNo = "", ackDt = "", signedInvoice = "", signedQRCode = "", ewbNo = "", ewbValidTill = "", ewbDt = "";
 
                         // Check for DUPIRN (Duplicate IRN)
                         if (!isSuccess && jObj["InfoDtls"] != null && jObj["InfoDtls"].HasValues)
