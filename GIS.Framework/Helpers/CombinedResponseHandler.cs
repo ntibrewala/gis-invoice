@@ -52,13 +52,29 @@ namespace GIS.Framework.Helpers
 
                         if (isSuccess && !isDuplicate)
                         {
-                            irn = jObj["Data"]?["Irn"]?.ToString() ?? "";
-                            ackNo = jObj["Data"]?["AckNo"]?.ToString() ?? "";
-                            ackDt = jObj["Data"]?["AckDt"]?.ToString() ?? "";
-                            signedInvoice = jObj["Data"]?["SignedInvoice"]?.ToString() ?? "";
-                            signedQRCode = jObj["Data"]?["SignedQRCode"]?.ToString() ?? "";
-                            ewbNo = jObj["Data"]?["EwbNo"]?.ToString() ?? "";
-                            ewbValidTill = jObj["Data"]?["EwbValidTill"]?.ToString() ?? "";
+                            var dataToken = jObj["Data"];
+                            if (dataToken != null && dataToken.Type == Newtonsoft.Json.Linq.JTokenType.String)
+                            {
+                                // The new API returns the Data object as a serialized JSON string
+                                var nestedObj = Newtonsoft.Json.Linq.JObject.Parse(dataToken.ToString());
+                                irn = nestedObj["Irn"]?.ToString() ?? "";
+                                ackNo = nestedObj["AckNo"]?.ToString() ?? "";
+                                ackDt = nestedObj["AckDt"]?.ToString() ?? "";
+                                signedInvoice = nestedObj["SignedInvoice"]?.ToString() ?? "";
+                                signedQRCode = nestedObj["SignedQRCode"]?.ToString() ?? "";
+                                ewbNo = jObj["EwbNo"]?.ToString() ?? nestedObj["EwbNo"]?.ToString() ?? "";
+                                ewbValidTill = jObj["EwbValidTill"]?.ToString() ?? nestedObj["EwbValidTill"]?.ToString() ?? "";
+                            }
+                            else if (dataToken != null && dataToken.Type == Newtonsoft.Json.Linq.JTokenType.Object)
+                            {
+                                irn = dataToken["Irn"]?.ToString() ?? "";
+                                ackNo = dataToken["AckNo"]?.ToString() ?? "";
+                                ackDt = dataToken["AckDt"]?.ToString() ?? "";
+                                signedInvoice = dataToken["SignedInvoice"]?.ToString() ?? "";
+                                signedQRCode = dataToken["SignedQRCode"]?.ToString() ?? "";
+                                ewbNo = dataToken["EwbNo"]?.ToString() ?? "";
+                                ewbValidTill = dataToken["EwbValidTill"]?.ToString() ?? "";
+                            }
                         }
 
                         if (isSuccess && !string.IsNullOrEmpty(irn))
