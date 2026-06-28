@@ -12,6 +12,15 @@ namespace GIS.Framework
             {
                 Helpers.LoggerHelper.Log($"--- STARTING STANDALONE E-INVOICE PROCESS FOR DOC: {docEntry} ---");
 
+                // PRE-VALIDATION: Check if an active E-Invoice already exists
+                string docType = (objType == "13") ? "13" : "14";
+                string checkQuery = $"SELECT 1 FROM \"GIS_EI_ORES\" WHERE \"ObjType\"='{docType}' AND \"DocEntry\"={docEntry} AND IFNULL(\"IsCancel\", '') != 'Y'";
+                var dtCheck = dbHelper.ExecuteQuery(checkQuery);
+                if (dtCheck != null && dtCheck.Rows.Count > 0)
+                {
+                    throw new Exception("An active E-Invoice (IRN) already exists for this document! Cancel it first before generating a new one.");
+                }
+
                 // Step 1: Fetch Credentials for this specific document
                 Helpers.LoggerHelper.Log("Fetching API Credentials...");
                 var credentials = Helpers.CredentialManager.GetCredentialsForDocument(dbHelper, objType, docEntry);
