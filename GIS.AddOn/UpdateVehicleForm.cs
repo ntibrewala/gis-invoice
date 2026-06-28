@@ -235,7 +235,7 @@ namespace GIS.AddOn
 
                 if (string.IsNullOrEmpty(UpdURL))
                 {
-                    Application.SBO_Application.SetStatusBarMessage("Target URL missing from database response.", SAPbouiCOM.BoMessageTime.bmt_Short, true);
+                    oApplication.StatusBar.SetText("Target URL missing from database response.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                     return;
                 }
 

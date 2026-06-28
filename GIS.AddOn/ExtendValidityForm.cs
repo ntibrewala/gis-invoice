@@ -346,13 +346,7 @@ namespace GIS.AddOn
 
                 if (string.IsNullOrEmpty(UpdURL))
                 {
-                    Application.SBO_Application.SetStatusBarMessage("Target URL missing from database response.", SAPbouiCOM.BoMessageTime.bmt_Short, true);
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(UpdURL))
-                {
-                    oApplication.StatusBar.SetText("Error: ExtendValidity URL not configured in @GIS_EW_OAPI", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    oApplication.StatusBar.SetText("Target URL missing from database response.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                     return;
                 }
 
