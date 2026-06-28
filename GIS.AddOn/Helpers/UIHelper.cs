@@ -87,7 +87,6 @@ namespace GIS.AddOn.Helpers
                     oComboComb = (ButtonCombo)oItemComb.Specific;
                     oComboComb.ValidValues.Add("Combined", "Combined");
                     oComboComb.ValidValues.Add("Generate", "Generate Combined");
-                    oComboComb.ValidValues.Add("Cancel", "Cancel Combined");
                     oItemComb.DisplayDesc = true;
                 }
                 oComboComb.Caption = "Combined";
