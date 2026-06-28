@@ -25,23 +25,24 @@ namespace GIS.Framework.Helpers
             {
                 JObject jObj = JObject.Parse(apiResponse);
                 
-                string status = jObj["Status"]?.ToString() ?? "";
-                if (status == "1" || status.ToLower() == "true")
+                // Check if it's an error response
+                if (jObj["error"] != null || jObj["status_cd"]?.ToString() == "0")
                 {
-                    // Success! 
-                    if (jObj["Data"] != null)
-                    {
-                        string ewbNo = jObj["Data"]["ewayBillNo"]?.ToString() ?? "";
-                        string validUpto = jObj["Data"]["validUpto"]?.ToString() ?? "";
-                        
-                        if (!string.IsNullOrEmpty(ewbNo))
-                        {
-                            // 2. Update SAP Document (OINV / ORIN / OWTR)
-                            string updateDocQ = $"UPDATE \"{tableName}\" SET \"U_ewayBNo\" = '{ewbNo}', \"U_EwbVal\" = '{validUpto}' WHERE \"DocEntry\" = {docEntry}";
-                            dbHelper.ExecuteNonQuery(updateDocQ);
-                            LoggerHelper.Log($"Successfully updated SAP Document {tableName} with E-Way Bill Number: {ewbNo}");
-                        }
-                    }
+                    string errorMsg = jObj["error"]?["message"]?.ToString() ?? "Unknown API Error";
+                    LoggerHelper.Log($"API returned error: {errorMsg}");
+                    return;
+                }
+
+                // E-Way API returns ewayBillNo directly in the root object on success
+                string ewbNo = jObj["ewayBillNo"]?.ToString() ?? "";
+                string validUpto = jObj["validUpto"]?.ToString() ?? "";
+                
+                if (!string.IsNullOrEmpty(ewbNo))
+                {
+                    // 2. Update SAP Document (OINV / ORIN / OWTR)
+                    string updateDocQ = $"UPDATE \"{tableName}\" SET \"U_ewayBNo\" = '{ewbNo}', \"U_EwbVal\" = '{validUpto}' WHERE \"DocEntry\" = {docEntry}";
+                    dbHelper.ExecuteNonQuery(updateDocQ);
+                    LoggerHelper.Log($"Successfully updated SAP Document {tableName} with E-Way Bill Number: {ewbNo}");
                 }
             }
             catch (Exception ex)
@@ -72,11 +73,17 @@ namespace GIS.Framework.Helpers
             {
                 JObject jObj = JObject.Parse(apiResponse);
                 
-                string status = jObj["Status"]?.ToString() ?? "";
-                if (status == "1" || status.ToLower() == "true")
+                // Check if it's an error response
+                if (jObj["error"] != null || jObj["status_cd"]?.ToString() == "0")
                 {
-                    // Success!
-                    
+                    string errorMsg = jObj["error"]?["message"]?.ToString() ?? "Unknown API Error";
+                    LoggerHelper.Log($"API returned error: {errorMsg}");
+                    return;
+                }
+
+                // If ewayBillNo exists in the root, cancellation succeeded
+                if (jObj["ewayBillNo"] != null)
+                {
                     // Fetch existing EWay Bill number so we can append "- Cancelled"
                     string query = $"SELECT \"U_ewayBNo\" FROM \"{tableName}\" WHERE \"DocEntry\"={docEntry}";
                     var dt = dbHelper.ExecuteQuery(query);
