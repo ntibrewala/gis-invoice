@@ -142,8 +142,17 @@ namespace GIS.Framework.Helpers
                     // Basic numeric type conversions for proper JSON
                     if (colName == "transDistance" || colName.Contains("Pincode") || colName.Contains("StateCode") || colName == "transactionType" || colName == "transMode" || colName == "subSupplyType")
                     {
-                        if (int.TryParse(val, out int num)) payload[colName] = num;
-                        else payload[colName] = val;
+                        if (int.TryParse(val, out int num)) 
+                        {
+                            payload[colName] = num;
+                        }
+                        else 
+                        {
+                            if (colName == "transactionType") payload[colName] = 1; // Default transaction type
+                            else if (colName == "transDistance") payload[colName] = 0; // Default distance
+                            else if (string.IsNullOrEmpty(val)) payload[colName] = null; // Omit empty string for integer fields
+                            else payload[colName] = val; // Fallback
+                        }
                     }
                     else
                     {
