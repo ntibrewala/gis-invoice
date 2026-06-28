@@ -131,7 +131,7 @@ namespace GIS.AddOn
                 var dbHelper = new DatabaseHelper(oCompany);
 
                 // 1. Get the GSTIN for the selected Business Partner
-                string gstQ = "SELECT COALESCE((SELECT TOP 1 \"TaxId0\" FROM CRD7 WHERE \"CardCode\" = '" + trnCardCode + "' AND \"Address\" = ''), \"LicTradNum\") AS \"GSTIN\" FROM OCRD WHERE \"CardCode\" = '" + trnCardCode + "'";
+                string gstQ = "SELECT COALESCE((SELECT \"TaxId0\" FROM CRD7 WHERE \"CardCode\" = '" + trnCardCode + "' AND \"Address\" = '' LIMIT 1), \"LicTradNum\") AS \"GSTIN\" FROM OCRD WHERE \"CardCode\" = '" + trnCardCode + "'";
                 System.Data.DataTable dtGst = dbHelper.ExecuteQuery(gstQ);
                 string trnGstin = dtGst != null && dtGst.Rows.Count > 0 ? dtGst.Rows[0]["GSTIN"].ToString().Trim() : "";
 
@@ -145,19 +145,23 @@ namespace GIS.AddOn
                 string sLocQuery = "";
                 if (sourceDocType == "Invoice")
                 {
-                    sLocQuery = "SELECT TOP 1 D.\"GSTRegnNo\", A4.\"GSTCode\" FROM INV1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry;
+                    sLocQuery = "SELECT D.\"GSTRegnNo\", A4.\"GSTCode\" FROM INV1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry + " LIMIT 1";
                 }
                 else if (sourceDocType == "Transfer")
                 {
-                    sLocQuery = "SELECT TOP 1 D.\"GSTRegnNo\", A4.\"GSTCode\" FROM WTR1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry;
+                    sLocQuery = "SELECT D.\"GSTRegnNo\", A4.\"GSTCode\" FROM WTR1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry + " LIMIT 1";
                 }
                 else
                 {
-                    sLocQuery = "SELECT TOP 1 D.\"GSTRegnNo\", A4.\"GSTCode\" FROM RIN1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry;
+                    sLocQuery = "SELECT D.\"GSTRegnNo\", A4.\"GSTCode\" FROM RIN1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry + " LIMIT 1";
                 }
 
                 System.Data.DataTable dtLoc = dbHelper.ExecuteQuery(sLocQuery);
-                if (dtLoc == null || dtLoc.Rows.Count == 0) return;
+                if (dtLoc == null || dtLoc.Rows.Count == 0)
+                {
+                    oApplication.StatusBar.SetText("Could not determine Warehouse GSTIN/State Code from document.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    return;
+                }
 
                 string locGSTIN = dtLoc.Rows[0]["GSTRegnNo"].ToString().Trim();
                 string locState = dtLoc.Rows[0]["GSTCode"].ToString().Trim();

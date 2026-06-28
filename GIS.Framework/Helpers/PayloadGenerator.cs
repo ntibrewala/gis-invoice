@@ -210,10 +210,22 @@ namespace GIS.Framework.Helpers
             string jsonPayload = JsonConvert.SerializeObject(cancelObj);
 
             // Fetch the Cancel URL
-            string sWhsQ = $"CALL \"TEC_GETWHSANDSTATE\"('{docEntry}','{objType}','WHS')";
-            string whsCode = dbHelper.ExecuteQuery(sWhsQ)?.Rows[0][0]?.ToString();
-            string sStateQ = $"CALL \"TEC_GETWHSANDSTATE\"('{whsCode}','{objType}','State')";
-            string stateCode = dbHelper.ExecuteQuery(sStateQ)?.Rows[0][0]?.ToString();
+            string spObjType = (objType == "13") ? "Invoice" : (objType == "14") ? "CreditMemo" : "Transfer";
+            string sWhsQ = $"CALL \"TEC_GETWHSANDSTATE\"('{docEntry}','{spObjType}','WHS')";
+            string whsCode = "";
+            var dtWhs = dbHelper.ExecuteQuery(sWhsQ);
+            if (dtWhs != null && dtWhs.Rows.Count > 0)
+            {
+                whsCode = dtWhs.Rows[0][0]?.ToString() ?? "";
+            }
+
+            string sStateQ = $"CALL \"TEC_GETWHSANDSTATE\"('{whsCode}','{spObjType}','State')";
+            string stateCode = "";
+            var dtState = dbHelper.ExecuteQuery(sStateQ);
+            if (dtState != null && dtState.Rows.Count > 0)
+            {
+                stateCode = dtState.Rows[0][0]?.ToString() ?? "";
+            }
 
             string urlQ = $"CALL \"TEC_EWAYLoginURL\"('CancelEWay','{stateCode}')";
             DataTable urlDt = dbHelper.ExecuteQuery(urlQ);
