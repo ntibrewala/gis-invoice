@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace GIS.Framework.Helpers
 {
-    internal static class ApiRunner
+    public static class ApiRunner
     {
         private static readonly HttpClient _httpClient = new HttpClient();
 

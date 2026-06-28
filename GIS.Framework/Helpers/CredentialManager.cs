@@ -5,7 +5,7 @@ using GIS.Framework.Models;
 
 namespace GIS.Framework.Helpers
 {
-    internal static class CredentialManager
+    public static class CredentialManager
     {
         public static ApiCredentials GetCredentialsForDocument(IDatabaseHelper dbHelper, string objType, string docEntry)
         {

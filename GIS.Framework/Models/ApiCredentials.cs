@@ -2,7 +2,7 @@ using System;
 
 namespace GIS.Framework.Models
 {
-    internal class ApiCredentials
+    public class ApiCredentials
     {
         public string GSTIN { get; set; }
         public string AspId { get; set; }
