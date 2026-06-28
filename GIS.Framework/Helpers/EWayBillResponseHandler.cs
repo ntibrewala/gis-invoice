@@ -40,7 +40,7 @@ namespace GIS.Framework.Helpers
                 if (!string.IsNullOrEmpty(ewbNo))
                 {
                     // 2. Update SAP Document (OINV / ORIN / OWTR)
-                    string updateDocQ = $"UPDATE \"{tableName}\" SET \"U_ewayBNo\" = '{ewbNo}', \"U_EwbVal\" = '{validUpto}' WHERE \"DocEntry\" = {docEntry}";
+                    string updateDocQ = $"UPDATE \"{tableName}\" SET \"U_ewayBNo\" = '{ewbNo}', \"U_EwayVal\" = '{validUpto}' WHERE \"DocEntry\" = {docEntry}";
                     dbHelper.ExecuteNonQuery(updateDocQ);
                     LoggerHelper.Log($"Successfully updated SAP Document {tableName} with E-Way Bill Number: {ewbNo}");
                 }

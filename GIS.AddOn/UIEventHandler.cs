@@ -263,7 +263,7 @@ namespace GIS.AddOn
                                 if (jObj["error"] != null || jObj["status_cd"]?.ToString() == "0")
                                 {
                                     string errorMsg = jObj["error"]?["message"]?.ToString() ?? "Unknown API Error";
-                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"API Error: {errorMsg}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                                 else if (jObj["ewayBillNo"] != null)
                                 {
@@ -271,7 +271,7 @@ namespace GIS.AddOn
                                 }
                                 else
                                 {
-                                    _connectionManager.SboApplication.MessageBox($"Unexpected Response: {apiRes}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"Unexpected Response: {apiRes}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                             }
                             catch (Exception parseEx)
@@ -295,7 +295,7 @@ namespace GIS.AddOn
                                 if (jObj["error"] != null || jObj["status_cd"]?.ToString() == "0")
                                 {
                                     string errorMsg = jObj["error"]?["message"]?.ToString() ?? "Unknown API Error";
-                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"API Error: {errorMsg}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                                 else if (jObj["ewayBillNo"] != null)
                                 {
@@ -303,7 +303,7 @@ namespace GIS.AddOn
                                 }
                                 else
                                 {
-                                    _connectionManager.SboApplication.MessageBox($"Unexpected Response: {apiRes}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"Unexpected Response: {apiRes}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                             }
                             catch (Exception parseEx)
