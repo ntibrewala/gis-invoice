@@ -11,9 +11,11 @@ namespace GIS.Framework.Helpers
             try
             {
                 // Always log the raw cancellation response to TEC_EI_LOG
+                string safeRequest = requestPayload.Replace("'", "''");
+                string safeResponse = rawJsonResponse.Replace("'", "''");
                 string sDocType = objType;
                 string sDocTypeLog = (objType == "13") ? "IN" : (objType == "14") ? "CM" : objType;
-                string logQuery = $"INSERT INTO \"TEC_EI_LOG\" (\"DocEntry\", \"DocType\", \"LogData\", \"CreateDate\", \"Type\") VALUES ('{docEntry}', '{sDocTypeLog}', '{rawJsonResponse}', CURRENT_TIMESTAMP, 'CancelResponse')";
+                string logQuery = $"INSERT INTO \"TEC_EI_LOG\" VALUES('{docEntry}', '{sDocTypeLog}', '{safeRequest}', '{safeResponse}', CURRENT_TIMESTAMP, 'Cancel')";
                 dbHelper.ExecuteNonQuery(logQuery);
 
                 var jObj = JObject.Parse(rawJsonResponse);

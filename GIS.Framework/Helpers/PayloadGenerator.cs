@@ -192,6 +192,11 @@ namespace GIS.Framework.Helpers
             string query = $"SELECT \"U_ewayBNo\" FROM \"{tableName}\" WHERE \"DocEntry\"={docEntry}";
             DataTable dt = dbHelper.ExecuteQuery(query);
 
+            if (dt == null || dt.Rows.Count == 0)
+            {
+                throw new Exception($"GenerateEWayBillCancelPayload: Document {docEntry} not found in {tableName}!");
+            }
+
             string ewbNo = dt.Rows[0]["U_ewayBNo"].ToString().Trim();
 
             var cancelObj = new 
