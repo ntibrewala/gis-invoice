@@ -257,18 +257,19 @@ namespace GIS.AddOn
                             try
                             {
                                 JObject jObj = JObject.Parse(apiRes);
-                                string status = jObj["Status"]?.ToString() ?? "";
                                 
-                                if (status == "0" || status.ToLower() == "false")
+                                if (jObj["error"] != null || jObj["status_cd"]?.ToString() == "0")
                                 {
-                                    string errorMsg = "E-Way Bill Failed.";
-                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
-                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    string errorMsg = jObj["error"]?["message"]?.ToString() ?? "Unknown API Error";
                                     _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else if (jObj["ewayBillNo"] != null)
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                                 }
                                 else
                                 {
-                                    _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                    _connectionManager.SboApplication.MessageBox($"Unexpected Response: {apiRes}");
                                 }
                             }
                             catch (Exception parseEx)
@@ -288,18 +289,19 @@ namespace GIS.AddOn
                             try
                             {
                                 JObject jObj = JObject.Parse(apiRes);
-                                string status = jObj["Status"]?.ToString() ?? "";
-
-                                if (status == "0" || status.ToLower() == "false")
+                                
+                                if (jObj["error"] != null || jObj["status_cd"]?.ToString() == "0")
                                 {
-                                    string errorMsg = "Cancellation Failed.";
-                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
-                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    string errorMsg = jObj["error"]?["message"]?.ToString() ?? "Unknown API Error";
                                     _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else if (jObj["ewayBillNo"] != null)
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Cancelled Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                                 }
                                 else
                                 {
-                                    _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Cancelled Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                    _connectionManager.SboApplication.MessageBox($"Unexpected Response: {apiRes}");
                                 }
                             }
                             catch (Exception parseEx)
