@@ -178,7 +178,30 @@ namespace GIS.Framework.Helpers
             var settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             string jsonPayload = JsonConvert.SerializeObject(payload, settings);
 
-            string targetUrl = headerTable.Rows[0].Table.Columns.Contains("URL") ? headerTable.Rows[0]["URL"].ToString().Trim() : "";
+            string targetUrl = "";
+            
+            // Fetch the GenEWay URL
+            string spObjType = (objType == "13") ? "Invoice" : (objType == "14") ? "CreditMemo" : "Transfer";
+            string sWhsQ = $"CALL \"TEC_GETWHSANDSTATE\"('{docEntry}','{spObjType}','WHS')";
+            string whsCode = "";
+            var dtWhs = dbHelper.ExecuteQuery(sWhsQ);
+            if (dtWhs != null && dtWhs.Rows.Count > 0)
+            {
+                whsCode = dtWhs.Rows[0][0]?.ToString() ?? "";
+            }
+
+            string sStateQ = $"CALL \"TEC_GETWHSANDSTATE\"('{whsCode}','{spObjType}','State')";
+            string stateCode = "";
+            var dtState = dbHelper.ExecuteQuery(sStateQ);
+            if (dtState != null && dtState.Rows.Count > 0)
+            {
+                stateCode = dtState.Rows[0][0]?.ToString() ?? "";
+            }
+
+            string urlQ = $"CALL \"TEC_EWAYLoginURL\"('GenEWay','{stateCode}')";
+            DataTable urlDt = dbHelper.ExecuteQuery(urlQ);
+            targetUrl = urlDt?.Rows[0]["URL"]?.ToString() ?? "";
+
             if (string.IsNullOrEmpty(targetUrl)) throw new Exception("Target URL missing from database response.");
 
             return new Tuple<string, string>(jsonPayload, targetUrl);
