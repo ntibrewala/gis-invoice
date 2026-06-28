@@ -59,6 +59,10 @@ namespace GIS.AddOn.Helpers
                     oComboEWay.ValidValues.Add("EWayBill", "E-WayBill");
                     oComboEWay.ValidValues.Add("Generate", "Generate E-WayBill");
                     oComboEWay.ValidValues.Add("Cancel", "Cancel E-WayBill");
+                    oComboEWay.ValidValues.Add("Inv Transfer", "Inventory Transfer");
+                    oComboEWay.ValidValues.Add("UpdateVehicle", "Update Part B");
+                    oComboEWay.ValidValues.Add("ExtendValidity", "Extend Validity");
+                    oComboEWay.ValidValues.Add("UpdateTrans", "Update Transporter");
                     oItemEWay.DisplayDesc = true;
                 }
                 oComboEWay.Caption = "E-WayBill";

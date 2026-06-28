@@ -32,16 +32,16 @@ namespace GIS.AddOn
             BubbleEvent = true;
             try
             {
-                // DRAW UI ON FORM LOAD FOR INVOICE (133) AND CREDIT MEMO (179)
-                if ((pVal.FormTypeEx == "133" || pVal.FormTypeEx == "179") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_LOAD && !pVal.BeforeAction)
+                // DRAW UI ON FORM LOAD FOR INVOICE (133), CREDIT MEMO (179), and INVENTORY TRANSFER (940)
+                if ((pVal.FormTypeEx == "133" || pVal.FormTypeEx == "179" || pVal.FormTypeEx == "940") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_LOAD && !pVal.BeforeAction)
                 {
                     var oForm = _connectionManager.SboApplication.Forms.Item(FormUID);
                     UIHelper.DrawLegacyButtonCombos(oForm);
                     return;
                 }
 
-                // LISTEN FOR COMBOBOX SELECTION ON THE MAIN FORM (133 or 179) FOR OUR CUSTOM BUTTON COMBOS
-                if ((pVal.FormTypeEx == "133" || pVal.FormTypeEx == "179") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_COMBO_SELECT && !pVal.BeforeAction)
+                // LISTEN FOR COMBOBOX SELECTION ON THE MAIN FORM (133, 179, 940) FOR OUR CUSTOM BUTTON COMBOS
+                if ((pVal.FormTypeEx == "133" || pVal.FormTypeEx == "179" || pVal.FormTypeEx == "940") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_COMBO_SELECT && !pVal.BeforeAction)
                 {
                     if (pVal.ItemUID == "btnComb" || pVal.ItemUID == "btnEWay" || pVal.ItemUID == "btnEInv")
                     {
@@ -62,6 +62,10 @@ namespace GIS.AddOn
                         
                         if (pVal.ItemUID == "btnEWay" && selectedValue == "Generate") actionName = "Generate E-Way Bill";
                         if (pVal.ItemUID == "btnEWay" && selectedValue == "Cancel") actionName = "Cancel E-Way Bill";
+                        if (pVal.ItemUID == "btnEWay" && selectedValue == "Inv Transfer") actionName = "Inventory Transfer";
+                        if (pVal.ItemUID == "btnEWay" && selectedValue == "UpdateVehicle") actionName = "Update Part B";
+                        if (pVal.ItemUID == "btnEWay" && selectedValue == "ExtendValidity") actionName = "Extend Validity";
+                        if (pVal.ItemUID == "btnEWay" && selectedValue == "UpdateTrans") actionName = "Update Transporter";
                         
                         if (pVal.ItemUID == "btnEInv" && selectedValue == "Generate") actionName = "Generate E-Invoice";
                         if (pVal.ItemUID == "btnEInv" && selectedValue == "Cancel") actionName = "Cancel E-Invoice";
@@ -77,8 +81,8 @@ namespace GIS.AddOn
                         }
 
                         // Retrieve the internal DocEntry
-                        string objType = (pVal.FormTypeEx == "133") ? "13" : "14";
-                        string tableName = (objType == "13") ? "OINV" : "ORIN";
+                        string objType = (pVal.FormTypeEx == "133") ? "13" : (pVal.FormTypeEx == "179") ? "14" : "67";
+                        string tableName = (objType == "13") ? "OINV" : (objType == "14") ? "ORIN" : "OWTR";
                         string docEntry = oForm.DataSources.DBDataSources.Item(tableName).GetValue("DocEntry", 0).Trim();
 
                         if (string.IsNullOrEmpty(docEntry))
@@ -224,6 +228,119 @@ namespace GIS.AddOn
                                 LoggerHelper.Log($"Failed to parse Cancel Response in UI: {parseEx.Message}");
                                 _connectionManager.SboApplication.StatusBar.SetText("Cancellation Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                             }
+                        }
+                        else if (actionName == "Generate E-Way Bill")
+                        {
+                            LoggerHelper.Log($"GIS ButtonCombo Selected! Initializing Standalone E-Way Bill for DocEntry: {docEntry}...");
+                            var dbHelper = new DatabaseHelper(_connectionManager.Company);
+                            _connectionManager.SboApplication.StatusBar.SetText("Generating E-Way Bill, please wait...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            
+                            string apiRes = EWayBillEngine.ProcessEWayBill(dbHelper, objType, docEntry);
+
+                            try
+                            {
+                                JObject jObj = JObject.Parse(apiRes);
+                                string status = jObj["Status"]?.ToString() ?? "";
+                                
+                                if (status == "0" || status.ToLower() == "false")
+                                {
+                                    string errorMsg = "E-Way Bill Failed.";
+                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
+                            }
+                            catch (Exception parseEx)
+                            {
+                                LoggerHelper.Log($"Failed to parse API Response: {parseEx.Message}");
+                                _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            }
+                        }
+                        else if (actionName == "Cancel E-Way Bill")
+                        {
+                            LoggerHelper.Log($"GIS ButtonCombo Selected! Initializing Cancel E-Way Bill for DocEntry: {docEntry}...");
+                            var dbHelper = new DatabaseHelper(_connectionManager.Company);
+                            _connectionManager.SboApplication.StatusBar.SetText("Cancelling E-Way Bill, please wait...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+
+                            string apiRes = EWayBillCancelEngine.ProcessCancel(dbHelper, objType, docEntry);
+
+                            try
+                            {
+                                JObject jObj = JObject.Parse(apiRes);
+                                string status = jObj["Status"]?.ToString() ?? "";
+
+                                if (status == "0" || status.ToLower() == "false")
+                                {
+                                    string errorMsg = "Cancellation Failed.";
+                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Cancelled Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
+                            }
+                            catch (Exception parseEx)
+                            {
+                                LoggerHelper.Log($"Failed to parse Cancel Response: {parseEx.Message}");
+                                _connectionManager.SboApplication.StatusBar.SetText("Cancellation Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            }
+                        }
+                        else if (actionName == "Inventory Transfer")
+                        {
+                            LoggerHelper.Log($"GIS ButtonCombo Selected! Initializing Inventory Transfer E-Way Bill for DocEntry: {docEntry}...");
+                            var dbHelper = new DatabaseHelper(_connectionManager.Company);
+                            _connectionManager.SboApplication.StatusBar.SetText("Generating Inventory Transfer E-Way Bill, please wait...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            
+                            // It uses the same engine but the PayloadGenerator will map it correctly based on objType 67
+                            string apiRes = EWayBillEngine.ProcessEWayBill(dbHelper, objType, docEntry);
+
+                            // We will process the response exactly like Generate E-Way Bill
+                            try
+                            {
+                                JObject jObj = JObject.Parse(apiRes);
+                                string status = jObj["Status"]?.ToString() ?? "";
+                                
+                                if (status == "0" || status.ToLower() == "false")
+                                {
+                                    string errorMsg = "E-Way Bill Failed.";
+                                    if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
+                                        errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
+                                    _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                }
+                                else
+                                {
+                                    _connectionManager.SboApplication.StatusBar.SetText("Inventory Transfer E-Way Bill Generated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
+                            }
+                            catch (Exception parseEx)
+                            {
+                                LoggerHelper.Log($"Failed to parse API Response: {parseEx.Message}");
+                                _connectionManager.SboApplication.StatusBar.SetText("E-Way Bill Processed, but response could not be read.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            }
+                        }
+                        else if (actionName == "Update Part B")
+                        {
+                            // Pop up the Form
+                            string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
+                            UpdateVehicleForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo);
+                        }
+                        else if (actionName == "Extend Validity")
+                        {
+                            // Pop up the Form
+                            string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
+                            ExtendValidityForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo);
+                        }
+                        else if (actionName == "Update Transporter")
+                        {
+                            // Pop up the Form
+                            string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
+                            UpdateTransporterForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo);
                         }
                         else
                         {

@@ -99,5 +99,124 @@ namespace GIS.Framework.Helpers
 
             return new Tuple<string, string>(jsonPayload, targetUrl);
         }
+
+        public static Tuple<string, string> GenerateEWayBillPayload(IDatabaseHelper dbHelper, string objType, string docEntry)
+        {
+            LoggerHelper.Log($"Starting Standalone E-Way Bill Payload Generation for ObjType: {objType}, DocEntry: {docEntry}...");
+
+            string sDocType = (objType == "13") ? "Invoice" : (objType == "14" ? "CreditMemo" : "Transfer");
+            
+            string headerQuery = "";
+            string detailQuery = "";
+            if (objType == "67")
+            {
+                // Inventory Transfer
+                headerQuery = $"CALL \"GIS_EWAY_Get_GenTrasfer_Split\"('{objType}', '{docEntry}', 'Addon', 'Header')";
+                detailQuery = $"CALL \"GIS_EWAY_Get_GenTrasfer_Split\"('{objType}', '{docEntry}', 'Addon', 'Detail')";
+            }
+            else
+            {
+                // Standard A/R Invoice or Credit Memo
+                headerQuery = $"CALL \"GIS_EwayBill_GetPostDet\"('{docEntry}', '', '', '', '', '', '', '', '', '', '{sDocType}', 'Header')";
+                detailQuery = $"CALL \"GIS_EwayBill_GetPostDet\"('{docEntry}', '', '', '', '', '', '', '', '', '', '{sDocType}', 'Detail')";
+            }
+
+            DataTable headerTable = dbHelper.ExecuteQuery(headerQuery);
+            if (headerTable == null || headerTable.Rows.Count == 0) throw new Exception("No header data returned for E-Way Bill.");
+
+            DataTable detailTable = dbHelper.ExecuteQuery(detailQuery);
+            if (detailTable == null || detailTable.Rows.Count == 0) throw new Exception("No detail data returned for E-Way Bill.");
+
+            LoggerHelper.Log("Mapping raw SAP data to E-Way Bill JSON...");
+            
+            // Dynamically map Header
+            var payload = new System.Collections.Generic.Dictionary<string, object>();
+            DataRow hRow = headerTable.Rows[0];
+            foreach (DataColumn col in headerTable.Columns)
+            {
+                string colName = col.ColumnName;
+                if (colName == "URL") continue; // Skip URL
+                if (hRow[colName] != DBNull.Value)
+                {
+                    string val = hRow[colName].ToString().Trim();
+                    // Basic numeric type conversions for proper JSON
+                    if (colName == "transDistance" || colName.Contains("Pincode"))
+                    {
+                        if (int.TryParse(val, out int num)) payload[colName] = num;
+                        else payload[colName] = val;
+                    }
+                    else
+                    {
+                        payload[colName] = val;
+                    }
+                }
+            }
+
+            // Map Details
+            var itemList = new System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>();
+            foreach (DataRow dRow in detailTable.Rows)
+            {
+                var item = new System.Collections.Generic.Dictionary<string, object>();
+                foreach (DataColumn col in detailTable.Columns)
+                {
+                    string colName = col.ColumnName;
+                    if (dRow[colName] != DBNull.Value)
+                    {
+                        string val = dRow[colName].ToString().Trim();
+                        // Infer decimals
+                        if (decimal.TryParse(val, out decimal decVal) && !colName.Contains("productName") && !colName.Contains("hsnCode"))
+                            item[colName] = decVal;
+                        else
+                            item[colName] = val;
+                    }
+                }
+                itemList.Add(item);
+            }
+
+            payload["itemList"] = itemList;
+
+            var settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            string jsonPayload = JsonConvert.SerializeObject(payload, settings);
+
+            string targetUrl = headerTable.Rows[0].Table.Columns.Contains("URL") ? headerTable.Rows[0]["URL"].ToString().Trim() : "";
+            if (string.IsNullOrEmpty(targetUrl)) throw new Exception("Target URL missing from database response.");
+
+            return new Tuple<string, string>(jsonPayload, targetUrl);
+        }
+
+        public static Tuple<string, string> GenerateEWayBillCancelPayload(IDatabaseHelper dbHelper, string objType, string docEntry)
+        {
+            LoggerHelper.Log($"Starting E-Way Bill Cancel Payload Generation for ObjType: {objType}, DocEntry: {docEntry}...");
+
+            string tableName = (objType == "13") ? "OINV" : (objType == "14") ? "ORIN" : "OWTR";
+            string query = $"SELECT \"U_ewayBNo\" FROM \"{tableName}\" WHERE \"DocEntry\"={docEntry}";
+            DataTable dt = dbHelper.ExecuteQuery(query);
+
+            string ewbNo = dt.Rows[0]["U_ewayBNo"].ToString().Trim();
+
+            var cancelObj = new 
+            { 
+                action = "CANEWB", 
+                ewbNo = long.Parse(ewbNo), 
+                cancelRsnCode = 1, 
+                cancelRmrk = "Cancelled" 
+            };
+
+            string jsonPayload = JsonConvert.SerializeObject(cancelObj);
+
+            // Fetch the Cancel URL
+            string sWhsQ = $"CALL \"TEC_GETWHSANDSTATE\"('{docEntry}','{objType}','WHS')";
+            string whsCode = dbHelper.ExecuteQuery(sWhsQ)?.Rows[0][0]?.ToString();
+            string sStateQ = $"CALL \"TEC_GETWHSANDSTATE\"('{whsCode}','{objType}','State')";
+            string stateCode = dbHelper.ExecuteQuery(sStateQ)?.Rows[0][0]?.ToString();
+
+            string urlQ = $"CALL \"TEC_EWAYLoginURL\"('CancelEWay','{stateCode}')";
+            DataTable urlDt = dbHelper.ExecuteQuery(urlQ);
+            string targetUrl = urlDt?.Rows[0]["URL"]?.ToString() ?? "";
+            
+            if (string.IsNullOrEmpty(targetUrl)) throw new Exception("Target URL for CancelEWay missing.");
+
+            return new Tuple<string, string>(jsonPayload, targetUrl);
+        }
     }
 }
