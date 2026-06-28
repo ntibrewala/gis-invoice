@@ -140,7 +140,7 @@ namespace GIS.Framework.Helpers
                 {
                     string val = hRow[colName].ToString().Trim();
                     // Basic numeric type conversions for proper JSON
-                    if (colName == "transDistance" || colName.Contains("Pincode"))
+                    if (colName == "transDistance" || colName.Contains("Pincode") || colName.Contains("StateCode") || colName == "transactionType" || colName == "transMode" || colName == "subSupplyType")
                     {
                         if (int.TryParse(val, out int num)) payload[colName] = num;
                         else payload[colName] = val;
@@ -154,6 +154,7 @@ namespace GIS.Framework.Helpers
 
             // Map Details
             var itemList = new System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>();
+            int itemCounter = 1;
             foreach (DataRow dRow in detailTable.Rows)
             {
                 var item = new System.Collections.Generic.Dictionary<string, object>();
@@ -163,6 +164,13 @@ namespace GIS.Framework.Helpers
                     if (dRow[colName] != DBNull.Value)
                     {
                         string val = dRow[colName].ToString().Trim();
+                        
+                        if (colName == "itemNo")
+                        {
+                            item[colName] = itemCounter;
+                            continue;
+                        }
+
                         // Infer decimals
                         if (decimal.TryParse(val, out decimal decVal) && !colName.Contains("productName") && !colName.Contains("hsnCode"))
                             item[colName] = decVal;
@@ -171,6 +179,7 @@ namespace GIS.Framework.Helpers
                     }
                 }
                 itemList.Add(item);
+                itemCounter++;
             }
 
             payload["itemList"] = itemList;
