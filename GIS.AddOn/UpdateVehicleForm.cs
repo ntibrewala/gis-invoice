@@ -8,7 +8,7 @@ namespace GIS.AddOn
 {
     class UpdateVehicleForm
     {
-        public static void LoadForm(SAPbouiCOM.Application oApplication, SAPbobsCOM.Company oCompany, string docEntry, string docType, string ewayNo)
+        public static void LoadForm(SAPbouiCOM.Application oApplication, SAPbobsCOM.Company oCompany, string docEntry, string docType, string ewayNo, string parentFormUID)
         {
             try
             {
@@ -32,6 +32,11 @@ namespace GIS.AddOn
                 itmDocT.Left = -100; itmDocT.Top = -100; itmDocT.Width = 10; itmDocT.Height = 10;
                 itmDocT.Visible = false;
                 ((SAPbouiCOM.EditText)itmDocT.Specific).Value = docType;
+
+                SAPbouiCOM.Item itmParent = oForm.Items.Add("txtPar", SAPbouiCOM.BoFormItemTypes.it_EDIT);
+                itmParent.Left = -100; itmParent.Top = -100; itmParent.Width = 10; itmParent.Height = 10;
+                itmParent.Visible = false;
+                ((SAPbouiCOM.EditText)itmParent.Specific).Value = parentFormUID;
 
                 // E-Way Bill No (display label + hidden edit to store value)
                 AddStatic(oForm, "lblEWay", 10, 10, 110, 14, "E-Way Bill No");
@@ -155,6 +160,7 @@ namespace GIS.AddOn
                 string docDt = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocDt").Specific).Value;
                 string sourceDocEntry = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocE").Specific).Value;
                 string sourceDocType = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocT").Specific).Value;
+                string parentFormUID = ((SAPbouiCOM.EditText)oForm.Items.Item("txtPar").Specific).Value;
 
                 // Dynamically fetch the Warehouse GSTIN and State Code based on the source document
                 string sLocQuery = "";
@@ -257,8 +263,24 @@ namespace GIS.AddOn
                         if (sourceDocType == "Transfer") tableName = "OWTR";
                         else if (sourceDocType != "Invoice") tableName = "ORIN";
                         
-                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_LrNo\" = '{docNo}', \"U_TransMode\" = '{transM}' WHERE \"DocEntry\" = {sourceDocEntry}";
-                        dbHelper.ExecuteNonQuery(updateQ);
+                        // We update the open form directly instead of doing a backend DB update to avoid "Modified by another user" error
+                        try
+                        {
+                            SAPbouiCOM.Form parentForm = oApplication.Forms.Item(parentFormUID);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_VehicleNo", 0, vehNo);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_LrNo", 0, docNo);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_TransMode", 0, transM);
+                            if (parentForm.Mode == SAPbouiCOM.BoFormMode.fm_OK_MODE)
+                                parentForm.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                            
+                            parentForm.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                        }
+                        catch (Exception innerEx)
+                        {
+                            // Fallback to SQL update if the form was somehow closed
+                            string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_LrNo\" = '{docNo}', \"U_TransMode\" = '{transM}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                            dbHelper.ExecuteNonQuery(updateQ);
+                        }
                     }
                     catch (Exception ex)
                     {

@@ -104,10 +104,11 @@ namespace GIS.Framework.Helpers
         {
             LoggerHelper.Log($"Starting Standalone E-Way Bill Payload Generation for ObjType: {objType}, DocEntry: {docEntry}...");
 
-            string sDocType = (objType == "13") ? "Invoice" : (objType == "14" ? "CreditMemo" : "Transfer");
+            string sDocType = (objType == "13") ? "Invoice" : (objType == "14" ? "CreditMemo" : objType);
             
             string headerQuery = "";
             string detailQuery = "";
+            
             if (objType == "67")
             {
                 // Inventory Transfer
@@ -116,7 +117,7 @@ namespace GIS.Framework.Helpers
             }
             else
             {
-                // Standard A/R Invoice or Credit Memo
+                // Legacy fallback for Credit Memo and everything else
                 headerQuery = $"CALL \"GIS_EwayBill_GetPostDet\"('{docEntry}', '', '', '', '', '', '', '', '', '', '{sDocType}', 'Header')";
                 detailQuery = $"CALL \"GIS_EwayBill_GetPostDet\"('{docEntry}', '', '', '', '', '', '', '', '', '', '{sDocType}', 'Detail')";
             }

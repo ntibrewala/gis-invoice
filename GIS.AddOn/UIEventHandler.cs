@@ -134,6 +134,7 @@ namespace GIS.AddOn
                                         errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
                                     }
                                     _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"API Error: {errorMsg}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                                 else if (status == "1" || status.ToLower() == "true")
                                 {
@@ -203,6 +204,7 @@ namespace GIS.AddOn
                                         errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
                                     }
                                     _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"API Error: {errorMsg}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                                 else if (status == "1" || status.ToLower() == "true")
                                 {
@@ -236,6 +238,7 @@ namespace GIS.AddOn
                                         errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
                                     }
                                     _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"API Error: {errorMsg}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                                 else
                                 {
@@ -333,6 +336,7 @@ namespace GIS.AddOn
                                     if (jObj["ErrorDetails"] != null && jObj["ErrorDetails"].HasValues)
                                         errorMsg = jObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? errorMsg;
                                     _connectionManager.SboApplication.MessageBox($"API Error: {errorMsg}");
+                                    _connectionManager.SboApplication.StatusBar.SetText($"API Error: {errorMsg}", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                                 }
                                 else
                                 {
@@ -347,21 +351,42 @@ namespace GIS.AddOn
                         }
                         else if (actionName == "Update Part B")
                         {
-                            // Pop up the Form
                             string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
-                            UpdateVehicleForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo);
+                            if (ewayNo.IndexOf("Cancelled", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                _connectionManager.SboApplication.MessageBox("Update Part B cannot run because the E-Way Bill is cancelled.");
+                                _connectionManager.SboApplication.StatusBar.SetText("Update Part B cannot run because the E-Way Bill is cancelled.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            }
+                            else
+                            {
+                                UpdateVehicleForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo, oForm.UniqueID);
+                            }
                         }
                         else if (actionName == "Extend Validity")
                         {
-                            // Pop up the Form
                             string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
-                            ExtendValidityForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo);
+                            if (ewayNo.IndexOf("Cancelled", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                _connectionManager.SboApplication.MessageBox("Extend Validity cannot run because the E-Way Bill is cancelled.");
+                                _connectionManager.SboApplication.StatusBar.SetText("Extend Validity cannot run because the E-Way Bill is cancelled.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            }
+                            else
+                            {
+                                ExtendValidityForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo, oForm.UniqueID);
+                            }
                         }
                         else if (actionName == "Update Transporter")
                         {
-                            // Pop up the Form
                             string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
-                            UpdateTransporterForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo);
+                            if (ewayNo.IndexOf("Cancelled", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                _connectionManager.SboApplication.MessageBox("Update Transporter cannot run because the E-Way Bill is cancelled.");
+                                _connectionManager.SboApplication.StatusBar.SetText("Update Transporter cannot run because the E-Way Bill is cancelled.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            }
+                            else
+                            {
+                                UpdateTransporterForm.LoadForm(_connectionManager.SboApplication, _connectionManager.Company, docEntry, objType, ewayNo, oForm.UniqueID);
+                            }
                         }
                         else
                         {

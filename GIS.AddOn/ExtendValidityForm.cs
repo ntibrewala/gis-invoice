@@ -8,7 +8,7 @@ namespace GIS.AddOn
 {
     class ExtendValidityForm
     {
-        public static void LoadForm(SAPbouiCOM.Application oApplication, SAPbobsCOM.Company oCompany, string docEntry, string docType, string ewayNo)
+        public static void LoadForm(SAPbouiCOM.Application oApplication, SAPbobsCOM.Company oCompany, string docEntry, string docType, string ewayNo, string parentFormUID)
         {
             try
             {
@@ -33,6 +33,11 @@ namespace GIS.AddOn
                 itmDocT.Left = -100; itmDocT.Top = -100; itmDocT.Width = 10; itmDocT.Height = 10;
                 itmDocT.Visible = false;
                 ((SAPbouiCOM.EditText)itmDocT.Specific).Value = docType;
+
+                SAPbouiCOM.Item itmParent = oForm.Items.Add("txtPar", SAPbouiCOM.BoFormItemTypes.it_EDIT);
+                itmParent.Left = -100; itmParent.Top = -100; itmParent.Width = 10; itmParent.Height = 10;
+                itmParent.Visible = false;
+                ((SAPbouiCOM.EditText)itmParent.Specific).Value = parentFormUID;
 
                 SAPbouiCOM.Item itmEwb = oForm.Items.Add("txtEwb", SAPbouiCOM.BoFormItemTypes.it_EDIT);
                 itmEwb.Left = -100; itmEwb.Top = -100; itmEwb.Width = 10; itmEwb.Height = 10;
@@ -227,6 +232,7 @@ namespace GIS.AddOn
 
                 string sourceDocEntry = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocE").Specific).Value;
                 string sourceDocType = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocT").Specific).Value;
+                string parentFormUID = ((SAPbouiCOM.EditText)oForm.Items.Item("txtPar").Specific).Value;
 
                 // NIC API Validations for Transit Type
                 if (transMode == "5")
@@ -372,8 +378,21 @@ namespace GIS.AddOn
                         if (sourceDocType == "Transfer") tableName = "OWTR";
                         else if (sourceDocType != "Invoice") tableName = "ORIN";
                         
-                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_EwbVal\" = '{newValidUpto}' WHERE \"DocEntry\" = {sourceDocEntry}";
-                        dbHelper.ExecuteNonQuery(updateQ);
+                        try
+                        {
+                            SAPbouiCOM.Form parentForm = oApplication.Forms.Item(parentFormUID);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_VehicleNo", 0, vehNo);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_EwbVal", 0, newValidUpto);
+                            if (parentForm.Mode == SAPbouiCOM.BoFormMode.fm_OK_MODE)
+                                parentForm.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                            
+                            parentForm.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                        }
+                        catch (Exception innerEx)
+                        {
+                            string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_EwbVal\" = '{newValidUpto}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                            dbHelper.ExecuteNonQuery(updateQ);
+                        }
                     }
                     catch (Exception ex)
                     {
