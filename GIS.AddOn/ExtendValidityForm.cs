@@ -379,28 +379,25 @@ namespace GIS.AddOn
                 else
                 {
                     string errMsg = "Unknown Error";
-                    if (XML_Final.StartsWith("{"))
+                    if (XML_Final.Trim().StartsWith("{"))
                     {
                         try
                         {
-                            System.Xml.Linq.XNode node = Newtonsoft.Json.JsonConvert.DeserializeXNode(XML_Final, "root");
-                            System.IO.StringReader theReader = new System.IO.StringReader(node.ToString());
-                            System.Data.DataSet oDs1 = new System.Data.DataSet();
-                            oDs1.ReadXml(theReader);
-                            if (oDs1.Tables.Contains("error"))
+                            dynamic respObj = Newtonsoft.Json.JsonConvert.DeserializeObject(XML_Final);
+                            if (respObj != null && respObj["error"] != null)
                             {
-                                if (oDs1.Tables["error"].Columns.Contains("message"))
-                                    errMsg = oDs1.Tables["error"].Rows[0]["message"].ToString();
-                                else if (oDs1.Tables["error"].Columns.Contains("errorCodes"))
-                                    errMsg = "NIC Error Code: " + oDs1.Tables["error"].Rows[0]["errorCodes"].ToString();
+                                if (respObj["error"]["message"] != null)
+                                    errMsg = respObj["error"]["message"].ToString();
+                                else
+                                    errMsg = respObj["error"].ToString();
                             }
-                            else if (oDs1.Tables.Count > 1 && oDs1.Tables[1].Columns.Contains("message"))
+                            else if (respObj != null && respObj["message"] != null)
                             {
-                                errMsg = oDs1.Tables[1].Rows[0]["message"].ToString();
+                                errMsg = respObj["message"].ToString();
                             }
-                            else if (oDs1.Tables.Count > 1 && oDs1.Tables[1].Columns.Contains("errorCodes"))
+                            else if (respObj != null && respObj["ErrorDetails"] != null)
                             {
-                                errMsg = "NIC Error Code: " + oDs1.Tables[1].Rows[0]["errorCodes"].ToString();
+                                errMsg = respObj["ErrorDetails"][0]["ErrorMessage"]?.ToString() ?? "Unknown API Error";
                             }
                         }
                         catch { errMsg = XML_Final; }
@@ -409,6 +406,33 @@ namespace GIS.AddOn
                     {
                         errMsg = XML_Final;
                     }
+
+                    // Distance Match Check Logic
+                    // "Distance between these two pincodes is 1230 KMs"
+                    if (errMsg.Contains("Distance between these two pincodes is"))
+                    {
+                        try
+                        {
+                            string[] words = errMsg.Split(' ');
+                            for (int i = 0; i < words.Length; i++)
+                            {
+                                if (words[i].ToLower() == "is" && i + 1 < words.Length)
+                                {
+                                    int suggestedDist = 0;
+                                    if (int.TryParse(words[i + 1], out suggestedDist))
+                                    {
+                                        ((SAPbouiCOM.EditText)oForm.Items.Item("txtDist").Specific).Value = suggestedDist.ToString();
+                                        errMsg = "Distance mismatch! The correct distance has been filled in. Please review and click Extend again.";
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    // Cap the error message length to avoid SAP status bar overflow
+                    if (errMsg.Length > 200) errMsg = errMsg.Substring(0, 200) + "...";
                     oApplication.StatusBar.SetText("Extend Error: " + errMsg, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                 }
             }

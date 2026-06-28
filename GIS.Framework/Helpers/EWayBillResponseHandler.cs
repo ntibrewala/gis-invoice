@@ -80,9 +80,13 @@ namespace GIS.Framework.Helpers
                     // Fetch existing EWay Bill number so we can append "- Cancelled"
                     string query = $"SELECT \"U_ewayBNo\" FROM \"{tableName}\" WHERE \"DocEntry\"={docEntry}";
                     var dt = dbHelper.ExecuteQuery(query);
-                    string ewbNo = dt?.Rows[0]["U_ewayBNo"]?.ToString() ?? "";
+                    string ewbNo = "";
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        ewbNo = dt.Rows[0]["U_ewayBNo"]?.ToString() ?? "";
+                    }
 
-                    if (!ewbNo.Contains("Cancelled"))
+                    if (!string.IsNullOrEmpty(ewbNo) && !ewbNo.Contains("Cancelled"))
                     {
                         ewbNo = ewbNo + " - Cancelled";
                     }

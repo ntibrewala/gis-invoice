@@ -32,6 +32,26 @@ namespace GIS.AddOn
             BubbleEvent = true;
             try
             {
+                // ROUTE EVENTS FOR CUSTOM ADD-ON FORMS
+                if (pVal.FormTypeEx == "GIS_OUPV")
+                {
+                    var frm = _connectionManager.SboApplication.Forms.Item(FormUID);
+                    UpdateVehicleForm.ItemEvent(ref _connectionManager.SboApplication, ref _connectionManager.Company, frm, ref pVal, ref BubbleEvent);
+                    return;
+                }
+                if (pVal.FormTypeEx == "GIS_OEXT")
+                {
+                    var frm = _connectionManager.SboApplication.Forms.Item(FormUID);
+                    ExtendValidityForm.ItemEvent(ref _connectionManager.SboApplication, ref _connectionManager.Company, frm, ref pVal, ref BubbleEvent);
+                    return;
+                }
+                if (pVal.FormTypeEx == "GIS_OUPT")
+                {
+                    var frm = _connectionManager.SboApplication.Forms.Item(FormUID);
+                    UpdateTransporterForm.ItemEvent(ref _connectionManager.SboApplication, ref _connectionManager.Company, frm, ref pVal, ref BubbleEvent);
+                    return;
+                }
+
                 // DRAW UI ON FORM LOAD FOR INVOICE (133), CREDIT MEMO (179), and INVENTORY TRANSFER (940)
                 if ((pVal.FormTypeEx == "133" || pVal.FormTypeEx == "179" || pVal.FormTypeEx == "940") && pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_LOAD && !pVal.BeforeAction)
                 {
