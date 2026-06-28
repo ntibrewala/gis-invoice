@@ -33,22 +33,19 @@ namespace GIS.AddOn
             try
             {
                 // ROUTE EVENTS FOR CUSTOM ADD-ON FORMS
-                if (pVal.FormTypeEx == "GIS_OUPV")
+                if (pVal.FormTypeEx == "GIS_OUPV" || pVal.FormTypeEx == "GIS_OEXT" || pVal.FormTypeEx == "GIS_OUPT")
                 {
-                    var frm = _connectionManager.SboApplication.Forms.Item(FormUID);
-                    UpdateVehicleForm.ItemEvent(ref _connectionManager.SboApplication, ref _connectionManager.Company, frm, ref pVal, ref BubbleEvent);
-                    return;
-                }
-                if (pVal.FormTypeEx == "GIS_OEXT")
-                {
-                    var frm = _connectionManager.SboApplication.Forms.Item(FormUID);
-                    ExtendValidityForm.ItemEvent(ref _connectionManager.SboApplication, ref _connectionManager.Company, frm, ref pVal, ref BubbleEvent);
-                    return;
-                }
-                if (pVal.FormTypeEx == "GIS_OUPT")
-                {
-                    var frm = _connectionManager.SboApplication.Forms.Item(FormUID);
-                    UpdateTransporterForm.ItemEvent(ref _connectionManager.SboApplication, ref _connectionManager.Company, frm, ref pVal, ref BubbleEvent);
+                    var app = _connectionManager.SboApplication;
+                    var comp = _connectionManager.Company;
+                    var frm = app.Forms.Item(FormUID);
+
+                    if (pVal.FormTypeEx == "GIS_OUPV")
+                        UpdateVehicleForm.ItemEvent(ref app, ref comp, frm, ref pVal, ref BubbleEvent);
+                    else if (pVal.FormTypeEx == "GIS_OEXT")
+                        ExtendValidityForm.ItemEvent(ref app, ref comp, frm, ref pVal, ref BubbleEvent);
+                    else if (pVal.FormTypeEx == "GIS_OUPT")
+                        UpdateTransporterForm.ItemEvent(ref app, ref comp, frm, ref pVal, ref BubbleEvent);
+
                     return;
                 }
 
