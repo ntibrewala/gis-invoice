@@ -35,6 +35,8 @@ namespace GIS.AddOn
                 // ROUTE EVENTS FOR CUSTOM ADD-ON FORMS
                 if (pVal.FormTypeEx == "GIS_OUPV" || pVal.FormTypeEx == "GIS_OEXT" || pVal.FormTypeEx == "GIS_OUPT")
                 {
+                    if (pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_UNLOAD) return; // Form is closing, ignore
+
                     var app = _connectionManager.SboApplication;
                     var comp = _connectionManager.Company;
                     var frm = app.Forms.Item(FormUID);
