@@ -247,7 +247,7 @@ namespace GIS.AddOn
                         if (sourceDocType == "Transfer") tableName = "OWTR";
                         else if (sourceDocType != "Invoice") tableName = "ORIN";
                         
-                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_LrNo\" = '{docNo}', \"U_TransMode\" = '{transM}' WHERE \"DocEntry\" = {sourceDocEntry}";
                         dbHelper.ExecuteNonQuery(updateQ);
                     }
                     catch (Exception ex)
