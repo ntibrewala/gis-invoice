@@ -198,7 +198,7 @@ namespace GIS.Framework.Helpers
                 stateCode = dtState.Rows[0][0]?.ToString() ?? "";
             }
 
-            string urlQ = $"CALL \"TEC_EWAYLoginURL\"('GenEWay','{stateCode}')";
+            string urlQ = $"CALL \"TEC_EWAYLoginURL\"('GenerateEWay','{stateCode}')";
             DataTable urlDt = dbHelper.ExecuteQuery(urlQ);
             targetUrl = urlDt?.Rows[0]["URL"]?.ToString() ?? "";
 
