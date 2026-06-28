@@ -8,7 +8,8 @@ namespace GIS.Framework.Helpers
         public void Handle(IDatabaseHelper dbHelper, string objType, string docEntry, string rawJsonRequest, string rawJsonResponse)
         {
             LoggerHelper.Log("Executing CombinedResponseHandler logic...");
-            LoggerHelper.Log("Executing CombinedResponseHandler logic...");
+            LoggerHelper.Log($"Request Payload: {rawJsonRequest}");
+            LoggerHelper.Log($"API Response: {rawJsonResponse}");
 
             try
             {

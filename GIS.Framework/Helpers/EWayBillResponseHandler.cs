@@ -12,6 +12,9 @@ namespace GIS.Framework.Helpers
 
             string tableName = (objType == "13") ? "OINV" : (objType == "14") ? "ORIN" : "OWTR";
             
+            LoggerHelper.Log($"Request Payload: {payload}");
+            LoggerHelper.Log($"API Response: {apiResponse}");
+            
             // 1. Log the RAW request/response into TEC_EW_LOG
             string safePayload = payload.Replace("'", "''");
             string safeResponse = apiResponse.Replace("'", "''");
@@ -55,6 +58,9 @@ namespace GIS.Framework.Helpers
             LoggerHelper.Log($"Handling API Response for E-Way Bill Cancel (DocEntry: {docEntry})...");
 
             string tableName = (objType == "13") ? "OINV" : (objType == "14") ? "ORIN" : "OWTR";
+            
+            LoggerHelper.Log($"Cancel Request Payload: {payload}");
+            LoggerHelper.Log($"Cancel API Response: {apiResponse}");
             
             // 1. Log the RAW request/response into TEC_EW_LOG
             string safePayload = payload.Replace("'", "''");
