@@ -182,7 +182,17 @@ namespace GIS.AddOn
 
                 string sUrlQ = "CALL \"TEC_EWAYLoginURL\"('UpdateTransporter','" + locState + "')";
                 System.Data.DataTable oADT1 = dbHelper.ExecuteQuery(sUrlQ);
-                string UpdURL = oADT1.Rows[0]["URL"].ToString().Trim();
+                string UpdURL = "";
+                if (oADT1 != null && oADT1.Rows.Count > 0)
+                {
+                    UpdURL = oADT1.Rows[0]["URL"].ToString().Trim();
+                }
+
+                if (string.IsNullOrEmpty(UpdURL))
+                {
+                    Application.SBO_Application.SetStatusBarMessage("Target URL missing from database response.", SAPbouiCOM.BoMessageTime.bmt_Short, true);
+                    return;
+                }
 
                 string XML_Final = ApiRunner.PostInvoice(sJSON, sAuthToken, creds.GSTIN, creds.UserName, creds.AspPassword, creds.AspId, UpdURL);
 

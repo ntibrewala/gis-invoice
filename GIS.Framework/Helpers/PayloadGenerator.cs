@@ -200,7 +200,10 @@ namespace GIS.Framework.Helpers
 
             string urlQ = $"CALL \"TEC_EWAYLoginURL\"('GenerateEWay','{stateCode}')";
             DataTable urlDt = dbHelper.ExecuteQuery(urlQ);
-            targetUrl = urlDt?.Rows[0]["URL"]?.ToString() ?? "";
+            if (urlDt != null && urlDt.Rows.Count > 0)
+            {
+                targetUrl = urlDt.Rows[0]["URL"]?.ToString() ?? "";
+            }
 
             if (string.IsNullOrEmpty(targetUrl)) throw new Exception("Target URL missing from database response.");
 
@@ -252,7 +255,11 @@ namespace GIS.Framework.Helpers
 
             string urlQ = $"CALL \"TEC_EWAYLoginURL\"('CancelEWay','{stateCode}')";
             DataTable urlDt = dbHelper.ExecuteQuery(urlQ);
-            string targetUrl = urlDt?.Rows[0]["URL"]?.ToString() ?? "";
+            string targetUrl = "";
+            if (urlDt != null && urlDt.Rows.Count > 0)
+            {
+                targetUrl = urlDt.Rows[0]["URL"]?.ToString() ?? "";
+            }
             
             if (string.IsNullOrEmpty(targetUrl)) throw new Exception("Target URL for CancelEWay missing.");
 
