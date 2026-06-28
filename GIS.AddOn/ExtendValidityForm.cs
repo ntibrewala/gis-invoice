@@ -380,7 +380,7 @@ namespace GIS.AddOn
                 string logQ = oCompany.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB
                     ? "INSERT INTO TEC_EW_LOG VALUES('" + sourceDocEntry + "','ExtendValidity','" + sJSON.Replace("'", "''") + "','" + XML_Final.Replace("'", "''") + "',CURRENT_TIMESTAMP,'" + oCompany.UserSignature + "')"
                     : "INSERT INTO TEC_EW_LOG VALUES('" + sourceDocEntry + "','ExtendValidity','" + sJSON.Replace("'", "''") + "','" + XML_Final.Replace("'", "''") + "',GETDATE(),'" + oCompany.UserSignature + "')";
-                GIS_EInvoice_SAP.Utilities.UtilitiesCls.ExecuteNonQuery(ref oCompany, logQ);
+                dbHelper.ExecuteNonQuery(logQ);
 
                 // Handle response
                 if (XML_Final.Contains("ewayBillNo") && XML_Final.Contains("validUpto"))
