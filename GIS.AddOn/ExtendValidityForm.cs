@@ -12,34 +12,6 @@ namespace GIS.AddOn
         {
             try
             {
-                // VALIDITY WINDOW CHECK (+/- 8 Hours)  commented out, let NIC API return error
-                // try
-                // {
-                //     string vQuery = "SELECT TOP 1 \"Response\" FROM \"TEC_EW_LOG\" WHERE \"DocEntry\" = " + docEntry + " AND \"Response\" LIKE '%validUpto%' ORDER BY \"CreateDate\" DESC";
-                //     System.Data.DataTable dtVal = GIS_EInvoice_SAP.Utilities.UtilitiesCls.QueryToDataTable(ref vQuery, ref oCompany);
-                //     if (dtVal != null && dtVal.Rows.Count > 0)
-                //     {
-                //         string respStr = dtVal.Rows[0]["Response"].ToString().Replace("\\\"", "\"").Trim('"');
-                //         System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(respStr, @"\""validUpto\""\s*:\s*\""([^\""]+)\""");
-                //         if (m.Success)
-                //         {
-                //             string dateStr = m.Groups[1].Value.Trim();
-                //             // Safely parse NIC 24-hour malformed dates e.g. "21/05/2018 23:59:00 PM"
-                //             string cleanDate = dateStr.Replace(" PM", "").Replace(" AM", "").Trim();
-                //             DateTime validUptoDate;
-                //             if (DateTime.TryParseExact(cleanDate, "dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out validUptoDate))
-                //             {
-                //                 DateTime now = DateTime.Now;
-                //                 if (now < validUptoDate.AddHours(-8) || now > validUptoDate.AddHours(8))
-                //                 {
-                //                     oApplication.StatusBar.SetText("Error: Extension only allowed within 8 hours before/after expiry (" + dateStr + ").", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
-                //                     return;
-                //                 }
-                //             }
-                //         }
-                //     }
-                // }
-                // catch (Exception) { /* Skip if log parsing fails, allow form to open */ }
 
                 SAPbouiCOM.FormCreationParams fcp = (SAPbouiCOM.FormCreationParams)oApplication.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_FormCreationParams);
                 fcp.UniqueID = "frmExtVld" + DateTime.Now.ToString("mmss");
