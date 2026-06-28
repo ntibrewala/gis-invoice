@@ -15,9 +15,9 @@ namespace GIS.AddOn
                 // Instantiate the dedicated UI Event Handler class
                 var uiEventHandler = new UIEventHandler(connectionManager);
 
-                // Keep the console open (In a real Add-On, this would be System.Windows.Forms.Application.Run)
-                Console.WriteLine("Add-On is running. Press Enter to exit...");
-                Console.ReadLine();
+                // Start the standard Windows message loop which keeps the process alive
+                // and responsive to SAP B1 COM events
+                System.Windows.Forms.Application.Run();
             }
             else
             {
