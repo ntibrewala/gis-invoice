@@ -150,7 +150,7 @@ namespace GIS.Framework.Helpers
                         {
                             if (colName == "transactionType") payload[colName] = 1; // Default transaction type
                             else if (colName == "transDistance") payload[colName] = 0; // Default distance
-                            else if (string.IsNullOrEmpty(val)) payload[colName] = null; // Omit empty string for integer fields
+                            else if (string.IsNullOrEmpty(val)) { /* Omit completely from Dictionary to avoid 'Invalid Json' */ }
                             else payload[colName] = val; // Fallback
                         }
                     }
