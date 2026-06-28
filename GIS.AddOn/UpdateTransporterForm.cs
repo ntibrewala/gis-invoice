@@ -163,6 +163,19 @@ namespace GIS.AddOn
                 if (XML_Final.Contains("vehUpdDate") || XML_Final.Contains("\"status\":\"1\"") || XML_Final.ToLower().Contains("success"))
                 {
                     oApplication.StatusBar.SetText("Transporter Updated Successfully!", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                    try
+                    {
+                        string tableName = "OINV";
+                        if (sourceDocType == "Transfer") tableName = "OWTR";
+                        else if (sourceDocType != "Invoice") tableName = "ORIN";
+                        
+                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VendCode\" = '{trnId}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                        dbHelper.ExecuteNonQuery(updateQ);
+                    }
+                    catch (Exception ex)
+                    {
+                        oApplication.StatusBar.SetText("Failed to update SAP Document: " + ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                    }
                     oForm.Close();
                 }
                 else
