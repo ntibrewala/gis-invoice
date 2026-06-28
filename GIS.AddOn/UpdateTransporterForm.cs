@@ -41,9 +41,26 @@ namespace GIS.AddOn
                 AddStatic(oForm, "lblEWay", 10, 10, 110, 14, "E-Way Bill No");
                 AddStatic(oForm, "lblEwb", 125, 10, 200, 14, ewayNo);
 
-                // Transporter Id
-                AddStatic(oForm, "lblTrnId", 10, 30, 110, 14, "Transporter GSTIN");
-                AddEdit(oForm, "txtTrnId", 125, 30, 190, 14);
+                // Transporter Dropdown (BP Master)
+                AddStatic(oForm, "lblTrnId", 10, 30, 110, 14, "Transporter (BP)");
+                SAPbouiCOM.Item itmTrnId = oForm.Items.Add("cmbTrnId", SAPbouiCOM.BoFormItemTypes.it_COMBO_BOX);
+                itmTrnId.Left = 125; itmTrnId.Top = 30; itmTrnId.Width = 190; itmTrnId.Height = 14;
+                SAPbouiCOM.ComboBox cmbTrnId = (SAPbouiCOM.ComboBox)itmTrnId.Specific;
+
+                // Populate Dropdown from OCRD
+                var dbHelper = new DatabaseHelper(oCompany);
+                string bpQuery = "SELECT \"CardCode\", \"CardName\" FROM OCRD WHERE \"CardType\" = 'S'";
+                System.Data.DataTable dtBPs = dbHelper.ExecuteQuery(bpQuery);
+                if (dtBPs != null)
+                {
+                    foreach (System.Data.DataRow row in dtBPs.Rows)
+                    {
+                        string cCode = row["CardCode"].ToString().Trim();
+                        string cName = row["CardName"].ToString().Trim();
+                        if (cName.Length > 250) cName = cName.Substring(0, 250);
+                        try { cmbTrnId.ValidValues.Add(cCode, cName); } catch { }
+                    }
+                }
 
                 // Buttons
                 AddButton(oForm, "btnSubmit", 120, 70, 80, 20, "Submit");
@@ -62,12 +79,6 @@ namespace GIS.AddOn
             SAPbouiCOM.Item i = f.Items.Add(uid, SAPbouiCOM.BoFormItemTypes.it_STATIC);
             i.Left = l; i.Top = t; i.Width = w; i.Height = h;
             ((SAPbouiCOM.StaticText)i.Specific).Caption = caption;
-        }
-
-        private static void AddEdit(SAPbouiCOM.Form f, string uid, int l, int t, int w, int h)
-        {
-            SAPbouiCOM.Item i = f.Items.Add(uid, SAPbouiCOM.BoFormItemTypes.it_EDIT);
-            i.Left = l; i.Top = t; i.Width = w; i.Height = h;
         }
 
         private static void AddButton(SAPbouiCOM.Form f, string uid, int l, int t, int w, int h, string caption)
@@ -105,16 +116,32 @@ namespace GIS.AddOn
                 oApplication.StatusBar.SetText("Processing Update Transporter...", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
 
                 string ewayNo = ((SAPbouiCOM.EditText)oForm.Items.Item("txtEWay").Specific).Value;
-                string trnId = ((SAPbouiCOM.EditText)oForm.Items.Item("txtTrnId").Specific).Value;
+                SAPbouiCOM.ComboBox cmbTrnId = (SAPbouiCOM.ComboBox)oForm.Items.Item("cmbTrnId").Specific;
+                
+                if (cmbTrnId.Selected == null)
+                {
+                    oApplication.StatusBar.SetText("Please select a Transporter.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    return;
+                }
+                
+                string trnCardCode = cmbTrnId.Selected.Value;
                 string sourceDocEntry = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocE").Specific).Value;
                 string sourceDocType = ((SAPbouiCOM.EditText)oForm.Items.Item("txtDocT").Specific).Value;
 
-                if (string.IsNullOrEmpty(trnId))
+                var dbHelper = new DatabaseHelper(oCompany);
+
+                // 1. Get the GSTIN for the selected Business Partner
+                string gstQ = "SELECT COALESCE((SELECT TOP 1 \"TaxId0\" FROM CRD7 WHERE \"CardCode\" = '" + trnCardCode + "' AND \"Address\" = ''), \"LicTradNum\") AS \"GSTIN\" FROM OCRD WHERE \"CardCode\" = '" + trnCardCode + "'";
+                System.Data.DataTable dtGst = dbHelper.ExecuteQuery(gstQ);
+                string trnGstin = dtGst != null && dtGst.Rows.Count > 0 ? dtGst.Rows[0]["GSTIN"].ToString().Trim() : "";
+
+                if (string.IsNullOrEmpty(trnGstin))
                 {
-                    oApplication.StatusBar.SetText("Transporter GSTIN is required.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    oApplication.StatusBar.SetText("Selected Transporter does not have a valid GSTIN setup in BP Master.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                     return;
                 }
 
+                // 2. Fetch the Warehouse GSTIN and State Code based on the source document
                 string sLocQuery = "";
                 if (sourceDocType == "Invoice")
                 {
@@ -129,7 +156,6 @@ namespace GIS.AddOn
                     sLocQuery = "SELECT TOP 1 D.\"GSTRegnNo\", A4.\"GSTCode\" FROM RIN1 A2 INNER JOIN OLCT D ON D.\"Code\"=A2.\"LocCode\" INNER JOIN OCST A4 ON A4.\"Code\"=D.\"State\" AND A4.\"Country\"=D.\"Country\" WHERE A2.\"DocEntry\" = " + sourceDocEntry;
                 }
 
-                var dbHelper = new DatabaseHelper(oCompany);
                 System.Data.DataTable dtLoc = dbHelper.ExecuteQuery(sLocQuery);
                 if (dtLoc == null || dtLoc.Rows.Count == 0) return;
 
@@ -143,9 +169,10 @@ namespace GIS.AddOn
 
                 var creds = CredentialManager.GetCredentialsForDocument(dbHelper, objType, sourceDocEntry);
 
+                // Build Request
                 dynamic trnReq = new System.Dynamic.ExpandoObject();
                 trnReq.ewbNo = Convert.ToInt64(ewayNo);
-                trnReq.transporterId = trnId;
+                trnReq.transporterId = trnGstin;
                 
                 string sJSON = Newtonsoft.Json.JsonConvert.SerializeObject(trnReq);
 
@@ -169,7 +196,7 @@ namespace GIS.AddOn
                         if (sourceDocType == "Transfer") tableName = "OWTR";
                         else if (sourceDocType != "Invoice") tableName = "ORIN";
                         
-                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VendCode\" = '{trnId}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                        string updateQ = $"UPDATE \"{tableName}\" SET \"U_VendCode\" = '{trnCardCode}' WHERE \"DocEntry\" = {sourceDocEntry}";
                         dbHelper.ExecuteNonQuery(updateQ);
                     }
                     catch (Exception ex)
