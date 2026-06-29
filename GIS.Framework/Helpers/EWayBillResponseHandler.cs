@@ -35,14 +35,44 @@ namespace GIS.Framework.Helpers
 
                 // E-Way API returns ewayBillNo directly in the root object on success
                 string ewbNo = jObj["ewayBillNo"]?.ToString() ?? "";
-                string validUpto = jObj["validUpto"]?.ToString() ?? "";
+                
+                string rawValidUpto = jObj["validUpto"]?.ToString() ?? "";
+                string validUpto = rawValidUpto;
+                if (DateTime.TryParseExact(rawValidUpto, "dd/MM/yyyy hh:mm:ss tt", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dtValidExact))
+                    validUpto = dtValidExact.ToString("yyyy-MM-dd HH:mm:ss");
+                else if (DateTime.TryParse(rawValidUpto, out DateTime dtValid))
+                    validUpto = dtValid.ToString("yyyy-MM-dd HH:mm:ss");
+                    
+                string rawEwbDate = jObj["ewayBillDate"]?.ToString() ?? "";
+                string ewbDate = rawEwbDate;
+                if (DateTime.TryParseExact(rawEwbDate, "dd/MM/yyyy hh:mm:ss tt", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dtEwbExact))
+                    ewbDate = dtEwbExact.ToString("yyyy-MM-dd HH:mm:ss");
+                else if (DateTime.TryParse(rawEwbDate, out DateTime dtEwb))
+                    ewbDate = dtEwb.ToString("yyyy-MM-dd HH:mm:ss");
+                
+                string alert = jObj["alert"]?.ToString() ?? "";
+                string distance = "";
+                if (!string.IsNullOrEmpty(alert))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(alert, @"\d+");
+                    if (match.Success)
+                    {
+                        distance = match.Value;
+                    }
+                }
                 
                 if (!string.IsNullOrEmpty(ewbNo))
                 {
                     // 2. Update SAP Document (OINV / ORIN / OWTR)
-                    string updateDocQ = $"UPDATE \"{tableName}\" SET \"U_ewayBNo\" = '{ewbNo}', \"U_EwayVal\" = '{validUpto}' WHERE \"DocEntry\" = {docEntry}";
+                    string updateDocQ = $"UPDATE \"{tableName}\" SET \"U_ewayBNo\" = '{ewbNo}', \"U_EwayVal\" = '{validUpto}', \"U_ewayBDa\" = '{ewbDate}'";
+                    if (!string.IsNullOrEmpty(distance))
+                    {
+                        updateDocQ += $", \"U_TotalDist\" = '{distance}'";
+                    }
+                    updateDocQ += $" WHERE \"DocEntry\" = {docEntry}";
+                    
                     dbHelper.ExecuteNonQuery(updateDocQ);
-                    LoggerHelper.Log($"Successfully updated SAP Document {tableName} with E-Way Bill Number: {ewbNo}");
+                    LoggerHelper.Log($"Successfully updated SAP Document {tableName} with E-Way Bill Number: {ewbNo} and Distance: {distance}");
                 }
             }
             catch (Exception ex)

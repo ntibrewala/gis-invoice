@@ -52,16 +52,12 @@ namespace GIS.Framework.Helpers
             EInvoicePayload payload = PayloadMappers.MapHeader(headerTable.Rows[0]);
             payload.ItemList = PayloadMappers.MapDetails(detailTable);
 
-            // Fetch E-Way Bill Details from the proper EWayBill Stored Procedure
+            // Fetch E-Way Bill Details from the existing header row
             try
             {
-                string sDocType = (objType == "13") ? "Invoice" : (objType == "14" ? "CreditMemo" : objType);
-                string ewbQuery = $"CALL \"GIS_EwayBill_GetPostDet\"('{docEntry}', '', '', '', '', '', '', '', '', '', '{sDocType}', 'Header')";
-                DataTable ewbTable = dbHelper.ExecuteQuery(ewbQuery);
-
-                if (ewbTable != null && ewbTable.Rows.Count > 0)
+                if (headerTable != null && headerTable.Rows.Count > 0)
                 {
-                    DataRow ewbRow = ewbTable.Rows[0];
+                    DataRow ewbRow = headerTable.Rows[0];
                     if (ewbRow.Table.Columns.Contains("transporterId") || ewbRow.Table.Columns.Contains("vehicleNo"))
                     {
                         string transId = ewbRow.Table.Columns.Contains("transporterId") ? ewbRow["transporterId"].ToString().Trim() : null;

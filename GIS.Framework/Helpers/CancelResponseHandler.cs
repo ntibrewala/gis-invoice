@@ -55,8 +55,11 @@ namespace GIS.Framework.Helpers
                     string docTable = (objType == "13") ? "OINV" : (objType == "14") ? "ORIN" : "";
                     if (!string.IsNullOrEmpty(docTable))
                     {
-                        // Prefix U_IRN with 'Cancelled '
-                        string updateSapDoc = $"UPDATE \"{docTable}\" SET \"U_CanclDte\" = '{formattedCancelDate}', \"U_IRN\" = CASE WHEN \"U_IRN\" NOT LIKE 'Cancelled %' THEN 'Cancelled ' || IFNULL(\"U_IRN\",'') ELSE \"U_IRN\" END WHERE \"DocEntry\" = {docEntry}";
+                        // Prefix U_IRN and U_ewayBNo with 'Cancelled '
+                        string updateSapDoc = $"UPDATE \"{docTable}\" SET \"U_CanclDte\" = '{formattedCancelDate}', " +
+                                              $"\"U_IRN\" = CASE WHEN \"U_IRN\" NOT LIKE 'Cancelled %' THEN 'Cancelled ' || IFNULL(\"U_IRN\",'') ELSE \"U_IRN\" END, " +
+                                              $"\"U_ewayBNo\" = CASE WHEN \"U_ewayBNo\" IS NOT NULL AND \"U_ewayBNo\" <> '' AND \"U_ewayBNo\" NOT LIKE 'Cancelled %' THEN 'Cancelled ' || \"U_ewayBNo\" ELSE \"U_ewayBNo\" END " +
+                                              $"WHERE \"DocEntry\" = {docEntry}";
                         dbHelper.ExecuteNonQuery(updateSapDoc);
                     }
 
