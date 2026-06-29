@@ -23,12 +23,16 @@ namespace GIS.AddOn.Helpers
                 catch
                 {
                     oItemEInv = oForm.Items.Add("btnEInv", BoFormItemTypes.it_BUTTON_COMBO);
-                    // Legacy coordinate placement relative to "Copy To" button ("10000330")
-                    oItemEInv.Left = oForm.Items.Item("10000330").Left - 110;
-                    oItemEInv.Top = oForm.Items.Item("10000330").Top;
-                    oItemEInv.Width = oForm.Items.Item("10000330").Width;
-                    oItemEInv.Height = oForm.Items.Item("10000330").Height;
-                    oItemEInv.LinkTo = "10000330";
+                    // Determine base button ID based on form type (OINV=10000330, OWTR=1250000074)
+                    string baseBtnId = "2"; // fallback
+                    try { if (oForm.Items.Item("10000330") != null) baseBtnId = "10000330"; } catch { }
+                    if (baseBtnId == "2") { try { if (oForm.Items.Item("1250000074") != null) baseBtnId = "1250000074"; } catch { } }
+
+                    oItemEInv.Left = oForm.Items.Item(baseBtnId).Left - 110;
+                    oItemEInv.Top = oForm.Items.Item(baseBtnId).Top;
+                    oItemEInv.Width = oForm.Items.Item(baseBtnId).Width;
+                    oItemEInv.Height = oForm.Items.Item(baseBtnId).Height;
+                    oItemEInv.LinkTo = baseBtnId;
 
                     oComboEInv = (ButtonCombo)oItemEInv.Specific;
                     oComboEInv.ValidValues.Add("E-Invoice", "E-Invoice");
