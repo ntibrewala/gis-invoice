@@ -106,7 +106,10 @@ namespace GIS.Framework.Helpers
                             catch { }
 
                             // Update SAP Document - ONLY use columns that exist on OINV
-                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}', \"U_ewayBNo\"='{ewbNo}', \"U_EwayVal\"='{ewbValidTill}', \"U_ewayBDa\"='{ewbDt}'";
+                            string updateQuery = $"UPDATE \"{tableName}\" SET \"Comments\"='SUCCESS', \"U_IRN\"='{irn}'";
+                            if (!string.IsNullOrEmpty(ewbNo)) updateQuery += $", \"U_ewayBNo\"='{ewbNo}'";
+                            if (!string.IsNullOrEmpty(ewbValidTill)) updateQuery += $", \"U_EwayVal\"='{ewbValidTill}'";
+                            if (!string.IsNullOrEmpty(ewbDt)) updateQuery += $", \"U_ewayBDa\"='{ewbDt}'";
                             if (!string.IsNullOrEmpty(distance)) updateQuery += $", \"U_TotalDist\"='{distance}'";
                             updateQuery += $" WHERE \"DocEntry\"={docEntry}";
 
@@ -118,7 +121,11 @@ namespace GIS.Framework.Helpers
                             var dt = dbHelper.ExecuteQuery(checkExist);
                             if (dt != null && dt.Rows.Count > 0)
                             {
-                                string updateOres = $"UPDATE \"GIS_EI_ORES\" SET \"ResponseMessage\"='SUCCESS', \"Status\"='ACT', \"AckNo\"='{ackNo}', \"AckDt\"='{ackDt}', \"Irn\"='{irn}', \"EncryptedSignedInvoice\"='{signedInvoice}', \"EncryptedSignedQRCode\"='{signedQRCode}', \"IsCancel\"='', \"ResponseCode\"='1', \"RandomNo\"='', \"QRCodeImage\"='', \"EwbNo\"='{ewbNo}', \"EwbDt\"='{ewbDt}', \"EwbValidTill\"='{ewbValidTill}' WHERE \"DocEntry\"={docEntry} AND \"ObjType\"='{sDocType}'";
+                                string updateOres = $"UPDATE \"GIS_EI_ORES\" SET \"ResponseMessage\"='SUCCESS', \"Status\"='ACT', \"AckNo\"='{ackNo}', \"AckDt\"='{ackDt}', \"Irn\"='{irn}', \"EncryptedSignedInvoice\"='{signedInvoice}', \"EncryptedSignedQRCode\"='{signedQRCode}', \"IsCancel\"='', \"ResponseCode\"='1', \"RandomNo\"='', \"QRCodeImage\"=''";
+                                if (!string.IsNullOrEmpty(ewbNo)) updateOres += $", \"EwbNo\"='{ewbNo}'";
+                                if (!string.IsNullOrEmpty(ewbDt)) updateOres += $", \"EwbDt\"='{ewbDt}'";
+                                if (!string.IsNullOrEmpty(ewbValidTill)) updateOres += $", \"EwbValidTill\"='{ewbValidTill}'";
+                                updateOres += $" WHERE \"DocEntry\"={docEntry} AND \"ObjType\"='{sDocType}'";
                                 dbHelper.ExecuteNonQuery(updateOres);
                                 LoggerHelper.Log($"Successfully updated existing record in GIS_EI_ORES for DocEntry {docEntry}.");
                             }
