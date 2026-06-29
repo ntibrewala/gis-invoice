@@ -354,7 +354,6 @@ namespace GIS.AddOn
                             string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
                             if (string.IsNullOrEmpty(ewayNo) || ewayNo.IndexOf("Cancelled", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                _connectionManager.SboApplication.MessageBox("Update Part B cannot run because the E-Way Bill is empty, null, or cancelled.");
                                 _connectionManager.SboApplication.StatusBar.SetText("Update Part B cannot run because the E-Way Bill is empty, null, or cancelled.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             }
                             else
@@ -367,7 +366,6 @@ namespace GIS.AddOn
                             string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
                             if (string.IsNullOrEmpty(ewayNo) || ewayNo.IndexOf("Cancelled", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                _connectionManager.SboApplication.MessageBox("Extend Validity cannot run because the E-Way Bill is empty, null, or cancelled.");
                                 _connectionManager.SboApplication.StatusBar.SetText("Extend Validity cannot run because the E-Way Bill is empty, null, or cancelled.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             }
                             else
@@ -380,7 +378,6 @@ namespace GIS.AddOn
                             string ewayNo = oForm.DataSources.DBDataSources.Item(tableName).GetValue("U_ewayBNo", 0).Trim();
                             if (string.IsNullOrEmpty(ewayNo) || ewayNo.IndexOf("Cancelled", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                _connectionManager.SboApplication.MessageBox("Update Transporter cannot run because the E-Way Bill is empty, null, or cancelled.");
                                 _connectionManager.SboApplication.StatusBar.SetText("Update Transporter cannot run because the E-Way Bill is empty, null, or cancelled.", SAPbouiCOM.BoMessageTime.bmt_Long, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             }
                             else
