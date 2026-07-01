@@ -215,8 +215,8 @@ namespace GIS.AddOn
                     try
                     {
                         string tableName = "OINV";
-                        if (sourceDocType == "Transfer") tableName = "OWTR";
-                        else if (sourceDocType != "Invoice") tableName = "ORIN";
+                        if (sourceDocType == "Transfer" || sourceDocType == "67") tableName = "OWTR";
+                        else if (sourceDocType == "CreditMemo" || sourceDocType == "14") tableName = "ORIN";
                         
                         try
                         {

@@ -108,8 +108,8 @@ namespace GIS.Framework.Helpers
             if (objType == "67")
             {
                 // Inventory Transfer
-                headerQuery = $"CALL \"GIS_EWAY_Get_GenTrasfer_Split\"('{objType}', '{docEntry}', 'Addon', 'Header')";
-                detailQuery = $"CALL \"GIS_EWAY_Get_GenTrasfer_Split\"('{objType}', '{docEntry}', 'Addon', 'Detail')";
+                headerQuery = $"CALL \"GIS_EwayBill_Transfer_Header\"('{docEntry}')";
+                detailQuery = $"CALL \"GIS_EwayBill_Transfer_Detail\"('{docEntry}')";
             }
             else
             {
