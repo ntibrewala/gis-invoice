@@ -268,7 +268,7 @@ namespace GIS.AddOn
                         {
                             SAPbouiCOM.Form parentForm = oApplication.Forms.Item(parentFormUID);
                             parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_VehicleNo", 0, vehNo);
-                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_LrNo", 0, docNo);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_LRNo", 0, docNo);
                             parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_TransMode", 0, transM);
                             if (parentForm.Mode == SAPbouiCOM.BoFormMode.fm_OK_MODE)
                                 parentForm.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
@@ -278,7 +278,7 @@ namespace GIS.AddOn
                         catch (Exception innerEx)
                         {
                             // Fallback to SQL update if the form was somehow closed
-                            string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_LrNo\" = '{docNo}', \"U_TransMode\" = '{transM}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                            string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_LRNo\" = '{docNo}', \"U_TransMode\" = '{transM}' WHERE \"DocEntry\" = {sourceDocEntry}";
                             dbHelper.ExecuteNonQuery(updateQ);
                         }
                     }
