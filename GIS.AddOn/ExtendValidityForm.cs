@@ -382,7 +382,7 @@ namespace GIS.AddOn
                         {
                             SAPbouiCOM.Form parentForm = oApplication.Forms.Item(parentFormUID);
                             parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_VehicleNo", 0, vehNo);
-                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_EwbVal", 0, newValidUpto);
+                            parentForm.DataSources.DBDataSources.Item(tableName).SetValue("U_EwayVal", 0, newValidUpto);
                             if (parentForm.Mode == SAPbouiCOM.BoFormMode.fm_OK_MODE)
                                 parentForm.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                             
@@ -390,7 +390,7 @@ namespace GIS.AddOn
                         }
                         catch (Exception innerEx)
                         {
-                            string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_EwbVal\" = '{newValidUpto}' WHERE \"DocEntry\" = {sourceDocEntry}";
+                            string updateQ = $"UPDATE \"{tableName}\" SET \"U_VehicleNo\" = '{vehNo}', \"U_EwayVal\" = '{newValidUpto}' WHERE \"DocEntry\" = {sourceDocEntry}";
                             dbHelper.ExecuteNonQuery(updateQ);
                         }
                     }
